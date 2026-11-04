@@ -17,7 +17,7 @@ Q('gps42','synonyms','Which word is closest to “generous”?',['unkind','givin
 Q('gps43','antonyms','Which word is opposite in meaning to “fragile”?',['delicate','breakable','sturdy','thin'],'sturdy','Sturdy describes something strong rather than easily broken.'),
 Q('gps44','antonyms','Which word is opposite in meaning to “ancient”?',['modern','historic','crumbling','old'],'modern','Modern means belonging to recent or present times.'),
 Q('gps45','antonyms','Which word is opposite in meaning to “expand”?',['grow','stretch','increase','shrink'],'shrink','To shrink is to become smaller, the opposite of expand.'),
-Q('gps46','word families','Which word belongs to the same word family as “act”?',['actor','able','active?','answer'],'actor','Actor is formed from the root act.'),
+Q('gps46','word families','Which word belongs to the same word family as “act”?',['actor','able','arrival','answer'],'actor','Actor is formed from the root act.'),
 Q('gps47','word families','Which word contains a suffix meaning “a person who does something”?',['teacher','teaching','teachable','taught'],'teacher','The suffix -er can mean a person who does a job or activity.'),
 Q('gps48','word families','Which word is made using the prefix “un-”?',['undo','under','unit','until'],'undo','Undo adds the prefix un- meaning reverse the action.'),
 Q('gps49','agreement','Choose the correct verb: “The basket of apples ___ heavy.”',['are','were','is','have'],'is','The subject basket is singular.'),
