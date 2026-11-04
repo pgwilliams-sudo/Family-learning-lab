@@ -42,6 +42,15 @@ test('extended reasoning has nine distinct mathematically correct 2-3 mark quest
  }
 });
 
+test('numeric marking accepts correctly written currency and measurement units',()=>{
+ const paper=buildTest('reasoning-extended','units');
+ for(const q of paper.questions){
+   assert.ok(mark(q,q.answer));
+   assert.ok(mark(q,String(q.answer)+' '+q.unit));
+   if(q.unit==='£')assert.ok(mark(q,'£'+q.answer));
+ }
+});
+
 test('rubric marking requires every response reviewed and gives partial credit fairly',()=>{
  const reading=buildTest('reading-extended','marks-r');
  const answers=reading.questions.map(q=>q.type==='choice'?q.answer:q.example);
