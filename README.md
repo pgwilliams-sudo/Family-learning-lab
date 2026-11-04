@@ -4,7 +4,7 @@ A family-first, modular adaptive tutor prototype. Built to grow with learners, n
 
 ## Kodjo's KS2 SATs Practice Centre
 
-The app now includes a separate [SATs Practice Centre](./sats/) with a repeatable 12-question daily mixed challenge, focused maths arithmetic/reasoning/fractions, grammar, reading and spelling practice. Questions vary by seed; recent IDs are avoided where possible. Results identify weaker components and share the existing per-child rewards and browser storage without a backend. This is **original SATs-style practice**, not a published STA paper or an official predicted grade. See [SATs module documentation](./sats/README.md) and run `npm run test:sats`. The SATs route uses relative paths so GitHub Pages serves it under the repository subpath.
+The app now includes a separate [SATs Practice Centre](./sats/) with a repeatable 12-question daily mixed challenge, focused maths arithmetic/reasoning/fractions, grammar, reading and spelling practice. Questions vary by seed; recent IDs are avoided where possible. Results identify weaker components and offer a **Fix this skill** mini-lesson with guided practice, two independent checks and a three-day review when both checks are correct. This shares the existing per-child rewards and browser storage without a backend. This is **original SATs-style practice**, not a published STA paper or an official predicted grade. See [SATs module documentation](./sats/README.md) and run `npm run test:sats`. The SATs route uses relative paths so GitHub Pages serves it under the repository subpath.
 
 ## What works in v0.2
 
