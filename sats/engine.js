@@ -142,6 +142,13 @@ export function mark(q,response){
  if(response===undefined||String(response).trim()==='')return false;
  if(q.type==='choice')return String(response)===String(q.answer);
  if(q.type==='spelling')return String(response).trim().toLowerCase()===q.answer.toLowerCase();
+ if(q.type==='multi-number'){
+   const unit=String(q.unit||'');
+   let value=String(response).trim();
+   if(unit==='£')value=value.replace(/^£\\s*/,'').replace(/\\s*£$/,'');
+   else if(unit&&value.toLowerCase().endsWith(unit.toLowerCase()))value=value.slice(0,-unit.length).trim();
+   response=value;
+ }
  const a=fracNumber(response),b=fracNumber(q.answer);
  return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<1e-8;
 }
