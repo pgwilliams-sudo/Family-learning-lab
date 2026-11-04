@@ -6,3 +6,18 @@
 .result-hero{background:#e7eee5;border:1px solid #cee0d1;border-radius:18px;padding:30px}.result-hero h1{font-size:3rem;color:var(--green)}.reviews details{border:1px solid var(--line);border-radius:11px;margin:10px 0;padding:12px}.reviews summary{cursor:pointer;font-size:.95rem;line-height:1.6}.reviews details div{padding:12px 0 0 22px}.reviews p{margin:5px 0}.right{color:#257052}.wrong{color:#a44b38}footer{text-align:center;color:#6d8177;font-size:.77rem;padding:24px 10px;border-top:1px solid var(--line)}
 @media(max-width:790px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1fr 120px}.countdown{width:120px;height:120px}.countdown b{font-size:2.4rem}}@media(max-width:560px){.nav{padding:12px}.brand{font-size:1.1rem}.nav-right label{display:none}.nav-right{gap:7px}.wrap{padding:17px 12px 40px}.hero{grid-template-columns:1fr}.countdown{display:none}.overview{gap:7px;margin:15px 0 25px}.overview>div{padding:12px}.overview strong{font-size:1.4rem}.overview span{font-size:.68rem}.grid{grid-template-columns:1fr}.module{min-height:auto}.controls span{display:none}.exam-head h1{font-size:1.5rem}.counter{font-size:.77rem}.history button{grid-template-columns:1fr 50px}.history small{display:none}.question{padding:22px 15px}.panel{padding:19px}.hero{padding:26px}.result-hero{padding:22px}.result-hero h1{font-size:2.5rem}}
 @media(prefers-reduced-motion:reduce){*,*:after,*:before{transition:none!important}}
+
+
+/* Remediation lessons deliberately look distinct from the test: teaching first,
+   guided practice second, independent checking last. */
+.lesson-stage{font-size:.77rem;letter-spacing:.12em;font-weight:850;color:#8d662d;margin:12px 0 18px}
+.lesson-panel{margin:16px 0 22px}
+.lesson-panel p{line-height:1.75}
+.worked-example{background:#edf5eb;border-left:4px solid #458f75;border-radius:10px;padding:16px 18px;margin:20px 0;color:#2a5143}
+.worked-example p{margin:8px 0 0;color:#2b5144}
+.lesson-question{margin-top:15px}
+.lesson-feedback{margin:22px 0;padding:15px 17px;background:#f5f0e2;border-radius:12px;border:1px solid #e3d2a4;font-weight:600;line-height:1.7}
+.lesson-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
+.targets .target-link{border:1px solid #c5dbcf;background:#eaf5ed;color:#175c47;padding:10px 15px;font-size:.85rem;font-weight:720;border-radius:100px}
+.targets .target-link:hover{background:#d5ebdc}
+@media(max-width:560px){.lesson-actions{flex:1}.lesson-actions button{flex:1}.targets .target-link{width:100%;text-align:left}}
