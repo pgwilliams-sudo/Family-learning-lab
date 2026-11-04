@@ -10,6 +10,8 @@ One November afternoon, a storm rolled in faster than anyone expected. The first
 
 Mrs Bell lifted the smallest books onto the highest shelves, while Amira carried boxes away from the floor. Then a loud bang came from the street. A rubbish bin had struck the entrance, bending the handle. The door would not open. Mrs Bell tried her phone, but the signal was weak.
 
+For a moment, Amira felt her stomach tighten. She could hear people calling in the street, but the words were snatched away by the wind. The library had survived many winter storms, Mrs Bell said, though the water had never risen quite so quickly. She showed Amira an old photograph of the boathouse, pinned beside the stairs. In it, the sea reached almost to the windows. Amira wondered how anyone had worked here when the harbour was rough. The picture made her realise why the upstairs rooms were built so high above the wooden floor. Perhaps, she thought, those rooms were their safest place now.
+
 Amira glanced towards the little window above the old delivery hatch. It was too narrow for an adult, but she thought she could climb through it. Mrs Bell shook her head. The waves were still reaching the street, and a fall onto the wet stones could be dangerous. “We need a plan that does not create another problem,” she said.
 
 The two of them gathered towels, pressed them against the gap beneath the door and moved the last boxes upstairs. From the upper window, Amira waved a bright yellow poster to the people sheltering in the café opposite. A man noticed and telephoned the coastguard. Soon two rescue workers arrived from the higher end of the street.
@@ -27,6 +29,8 @@ When the library reopened, there was a new sign beside the entrance. It did not 
 {id:'peatlands',title:'Why Wetlands Matter',genre:'non-fiction',level:2,text:`At first glance, a peat bog may seem an unlikely place to protect. The ground is often wet, uneven and covered in moss. It can be difficult to walk across, and there are few tall trees. Yet beneath the surface lies a record of the past and an important store of carbon.
 
 Peat forms when dead plants collect in waterlogged ground. Because there is very little oxygen in the wet soil, the plants break down extremely slowly. Layer after layer builds up over hundreds or even thousands of years. Some deep peat deposits contain traces of ancient pollen, allowing scientists to study which plants grew there long ago.
+
+To investigate a bog, researchers sometimes take a narrow sample from deep underground. Each layer represents a different period, rather like pages in a history book. The oldest material lies at the bottom, while more recent plant remains are closer to the surface. By comparing the pollen in different layers, scientists can build a picture of past landscapes. This method is useful but painstaking: a sample must be labelled carefully so that its depth is not forgotten. A single core might reveal that a place now covered in moss once supported shrubs or grasses. Peatlands therefore provide evidence about changing environments, as well as helping protect those environments today.
 
 The same slow process that preserves pollen also traps carbon. Living plants take carbon dioxide from the air as they grow. When they die in a peat bog, some of the carbon remains stored in the soil. If the bog dries out, however, oxygen reaches the buried material and decomposition speeds up. Carbon dioxide can then escape back into the atmosphere.
 
@@ -54,6 +58,8 @@ Tariq did not answer. He had told his friends he would return with spectacular p
 
 Just then, his grandfather mentioned a childhood evening when the family had walked for miles to watch a comet. Clouds had hidden it entirely. Yet he still remembered the sound of crickets and his brother sharing a sandwich. He had never seen the comet, but he had not forgotten the night.
 
+Tariq had always thought of such trips as chances to collect proof: a photograph to send to his friends, a date in his notebook and a list of objects he had spotted. His grandfather's memories were different. He remembered the steep path up the hill and the way the air smelled after rain. He remembered someone making everyone laugh by dropping the sandwiches. None of these details would have appeared in a photograph of the comet, even if the clouds had lifted. Tariq looked at the camera beside him and thought of the many pictures he had taken and barely looked at again. Perhaps an evening could be worth something even when it produced nothing to show.
+
 Tariq looked around. Beyond the hill, the town was a string of tiny lights. The grass moved in silver waves beneath the moon. He put down his camera and watched without trying to capture anything.
 
 A sudden white line crossed the sky. Then another. Tariq barely had time to call out before three meteors flashed over the ridge. He laughed, delighted, as the last streak faded.
@@ -75,6 +81,8 @@ A local group proposed building a lightweight garden on the roof. Engineers firs
 The volunteers chose hardy crops, including herbs, beans and leafy vegetables. They installed tanks to capture rainwater, which was then used during dry periods. The garden did not supply enough food for the whole neighbourhood, but it became a popular place for school visits and workshops.
 
 Researchers monitored temperatures on the roof and nearby pavements. On sunny afternoons, the planted areas were often cooler than exposed roofing. The plants offered some shade and released water vapour, both of which could help reduce heat. However, the researchers warned against treating one small garden as a solution to every city problem.
+
+They compared readings on clear days and cloudy days, noting that the difference between planted and bare surfaces was not always the same. A garden could cool a small section of roof, but it could not replace parks, street trees or shade over busy pavements. Nor could the volunteers assume that every roof was suitable for planting. Some older structures might not support heavy soil, while others lacked a safe way for people to visit. The team shared its measurements with residents at an open meeting, explaining both what they had observed and what remained uncertain. Several visitors said they trusted the findings more because the limitations were presented openly.
 
 Maintenance proved important too. During a particularly dry summer, volunteers had to water more often than expected. Some plants failed, and others were eaten by insects. The group replaced them with varieties better suited to the conditions.
 
@@ -100,6 +108,8 @@ Eloise expected the stories to be full of daring adventures. Instead, her aunt s
 
 At school, Eloise presented the radio to her class. She demonstrated its crackling voice and described how she had repaired it. But her final slide was not a picture of the machine. It was a photograph of the rescue team standing outside the village hall, tired and smiling.
 
+One pupil asked why the team had not been awarded medals. Eloise did not know, so she asked the class to look at the photograph closely. A woman near the edge carried a clipboard. Two men held rolled maps, while someone in the back wore an apron over thick winter clothes. The people in the picture had probably completed very different jobs, but their expressions suggested that each felt part of the same achievement. Her teacher asked whether the rescue could have succeeded if the person checking maps had made a mistake. The room was silent for a moment. Eloise realised she had spent so long trying to repair the radio that she had almost missed its most important story.
+
 Later, when her teacher asked what she had learned, Eloise considered the repaired radio in its box. She had begun with a problem of wires and batteries. Somehow, she had ended up thinking about the quiet people whose work was rarely celebrated.`,questions:[
  C('retrieval','What was written on the label on the radio?',['Mountain Rescue, 1968','Village News, 1998','Weather Station, 1948','School Radio, 1978'],'Mountain Rescue, 1968','The label identifies the radio’s former use.'),
  C('inference','Why was Eloise surprised by the rescue stories?',['They focused on teamwork rather than dramatic adventures.','Her aunt had forgotten Martin’s name.','There were no mountains in the area.','The radio had never worked.'],'They focused on teamwork rather than dramatic adventures.','She expects daring stories but hears about useful ordinary jobs.'),
@@ -115,6 +125,8 @@ People began building beacons on dangerous headlands and near busy ports. Some e
 A lighthouse keeper might spend hours cleaning soot from glass, polishing metal reflectors and carrying fuel up narrow stairs. During storms, the building shook and waves struck the walls below. If the light failed at the wrong moment, ships approaching the coast could be in danger.
 
 Engineers gradually improved lighthouse technology. Rotating lenses produced recognisable flashes, allowing sailors to tell one light from another. Later, electric lamps replaced many older sources of illumination. Automatic systems eventually reduced the need for a keeper to live on site.
+
+Sailors also learned to read charts showing the particular pattern of each important light. One beacon might flash twice before a pause, while another could produce a single longer beam. These differences helped crews avoid confusing nearby landmarks on a dark coastline. A ship approaching a harbour could use several sources of information together: the flash pattern of a lighthouse, the position of a buoy and the shape of the land. If one clue seemed inconsistent with the others, the crew would know to check its course carefully. Although the equipment became more sophisticated, sailors still needed training and sound judgement to use it well. Technology could provide guidance, but it could not make every decision for them.
 
 Today, many ships use satellite navigation and detailed digital charts. Yet visual aids remain useful, particularly if electronic equipment fails or visibility changes suddenly. Buoys and beacon lights can confirm a vessel’s position as it approaches a harbour entrance.
 
