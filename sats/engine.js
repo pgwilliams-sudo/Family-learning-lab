@@ -1,4 +1,5 @@
 import {grammar,spellings,passages,MODULES} from './content.js';
+import {createExtraReasoning} from './reasoning-extra.js';
 const randInt=(rng,min,max)=>min+Math.floor(rng()*(max-min+1));
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 const fraction=(n,d)=>{const k=gcd(n,d);return `${n/k}/${d/k}`;};
@@ -29,6 +30,7 @@ const reasoning=[
  r=>{const x=randInt(r,2,14),y=randInt(r,2,14),z=randInt(r,2,14);return q(`data-${x}-${y}-${z}`,'reasoning','statistics',`A class survey records football: ${x+10}, basketball: ${y+10}, swimming: ${z+10}. How many more pupils chose football and basketball together than swimming?`,x+y-z+10,`Add ${x+10} + ${y+10}, then subtract ${z+10}. Result: ${x+y-z+10}.`);},
  r=>{const a=randInt(r,8,25),b=randInt(r,5,18),c=randInt(r,2,Math.min(7,Math.floor(a*b/10)));return q(`change-${a}-${b}-${c}`,'reasoning','multi-step problems',`A school has ${a} packs containing ${b} pencils each. It gives away ${c*10} pencils. How many remain?`,a*b-c*10,`Multiply first (${a} × ${b} = ${a*b}), then subtract ${c*10}.`);}
 ];
+reasoning.push(...createExtraReasoning(randInt,q));
 function shuffle(items,rng){const a=[...items];for(let i=a.length-1;i>0;i--){const j=randInt(rng,0,i);[a[i],a[j]]=[a[j],a[i]];}return a;}
 function bankPick(items,count,seen,rng,used){const unique=shuffle(items.filter(x=>!used.has(x.id)),rng);const fresh=unique.filter(x=>!seen.has(x.id));const old=unique.filter(x=>seen.has(x.id));const chosen=[...fresh,...old].slice(0,count);chosen.forEach(x=>used.add(x.id));return chosen;}
 function maths(gen,count,seen,rng,used){
@@ -62,6 +64,28 @@ function reading(count,seen,rng,used){
  if(chosen.length!==count)throw Error('Insufficient reading questions');
  return chosen;
 }
+// Produce three genuinely skill-specific follow-up items for a missed component.
+// Each result uses the same deterministic marking as the original test.
+export function practiceForSkill(skill,seed,recentIds=[],count=3){
+ const rng=seeded(seed),seen=new Set(recentIds),used=new Set();
+ const mathsTemplates=[...arith,...reasoning].filter(make=>make(seeded('detect-skill')).skill===skill);
+ if(mathsTemplates.length)return maths(mathsTemplates,count,seen,rng,used);
+ const english=grammar.filter(item=>item.skill===skill);
+ if(english.length)return bankPick(english,count,seen,rng,used);
+ if(skill==='spelling'){
+   const words=spellings.map((item,i)=>({id:`spell-${i}`,section:'spelling',skill:'spelling',prompt:'Listen to the word and spell it.',type:'spelling',answer:item.word,sentence:item.sentence,explanation:`Correct spelling: ${item.word}.`,marks:1}));
+   return bankPick(words,count,seen,rng,used);
+ }
+ const readSkills=new Set(['retrieval','inference','vocabulary','theme','purpose']);
+ if(readSkills.has(skill)){
+   const bank=passages.flatMap(p=>p.questions.map(([s,prompt,choices,answer,explanation],i)=>({
+     id:`read-${p.id}-${i}`,section:'reading',skill:s,passageTitle:p.title,passage:p.text,prompt,choices,answer,explanation,type:'choice',marks:1
+   }))).filter(item=>item.skill===skill);
+   return bankPick(bank,count,seen,rng,used);
+ }
+ return [];
+}
+
 export function buildTest(mode,seed,recentIds=[]){
  if(!MODULES.some(m=>m.id===mode))throw Error('Unknown SATs module');
  const rng=seeded(seed),seen=new Set(recentIds),used=new Set(),questions=[];
