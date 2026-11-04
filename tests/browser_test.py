@@ -77,6 +77,13 @@ class BrowserFlow(unittest.TestCase):
         self.assertEqual(progress['hints'],1)
         self.assertEqual(progress['diagnosis']['status'],'likely')
         self.assertEqual(len(stored['sessions']),1)
+        self.assertEqual(stored['version'],2)
+        self.assertGreater(stored['rewards']['kodjo']['xp'],0)
+        self.assertIn('first-step',stored['rewards']['kodjo']['badges'])
+        self.assertIn('first-lesson',stored['rewards']['kodjo']['badges'])
+        self.assertEqual(stored['rewards']['kodjo']['completedLessons'],1)
+        self.assertEqual(sum(o['xp'] for o in stored['sessions'][0]['outcomes']),stored['sessions'][0]['xp'])
+        kodjo_rewards=stored['rewards']['kodjo']
         click('parent')
         self.assertIn('Recommended next exercise',page.locator('main').inner_text())
         self.assertIn('Common denominators',page.locator('main').inner_text())
@@ -88,6 +95,8 @@ class BrowserFlow(unittest.TestCase):
         self.assertEqual(saved['progress']['nico::maths.fractions.equivalent']['attempts'],1)
         self.assertFalse(saved['progress']['nico::maths.fractions.equivalent']['secure'])
         self.assertEqual(saved['activeLearnerId'],'nico')
+        self.assertEqual(saved['rewards']['kodjo'],kodjo_rewards)
+        self.assertEqual(saved['rewards']['nico']['xp'],12)
         self.assertEqual(errors,[])
         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'),390)
         context.close()
@@ -125,11 +134,11 @@ class BrowserFlow(unittest.TestCase):
           localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
         }""")
         page.reload();page.locator('[data-action="start-fractions"]').click()
-        self.assertIn('LEVEL 1',page.locator('.eyebrow').last.inner_text())
+        self.assertIn('CHALLENGE 1',page.locator('.eyebrow').last.inner_text())
         self.answer_current(page)
         page.locator('[data-action="home"]').first.click()
         page.locator('[data-action="start-fractions"]').click()
-        self.assertIn('LEVEL 2',page.locator('.eyebrow').last.inner_text())
+        self.assertIn('CHALLENGE 2',page.locator('.eyebrow').last.inner_text())
         page.evaluate("""() => {
           const data=JSON.parse(localStorage.getItem('family-learning-lab:v1'));
           data.progress['kodjo::maths.fractions.equivalent'].mastery=90;
@@ -137,9 +146,11 @@ class BrowserFlow(unittest.TestCase):
           localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
         }""")
         page.reload();page.locator('[data-action="start-fractions"]').click()
-        self.assertIn('LEVEL 3',page.locator('.eyebrow').last.inner_text())
+        self.assertIn('CHALLENGE 3',page.locator('.eyebrow').last.inner_text())
         page.select_option('#profile-select','nico');page.locator('[data-action="start-fractions"]').click()
-        self.assertIn('LEVEL 4',page.locator('.eyebrow').last.inner_text())
+        self.assertIn('CHALLENGE 4',page.locator('.eyebrow').last.inner_text())
+        self.answer_current(page)
+        self.assertIn('+16 XP',page.locator('.earned-note').inner_text())
         context.close()
 
     def test_repeat_limits_persist_through_reload_without_attempt_escalation(self):
@@ -149,7 +160,7 @@ class BrowserFlow(unittest.TestCase):
         recent=[]
         for _ in range(14):
             page.locator('[data-action="start-fractions"]').click()
-            self.assertIn('LEVEL 1',page.locator('.eyebrow').last.inner_text())
+            self.assertIn('CHALLENGE 1',page.locator('.eyebrow').last.inner_text())
             for _ in range(2):
                 page.locator('#numerator').fill('99');page.locator('#denominator').fill('97')
                 page.locator('[data-action="check-answer"]').click()
@@ -159,6 +170,79 @@ class BrowserFlow(unittest.TestCase):
             recent.append(ids[-1])
             self.assertLessEqual(len(ids),12)
             page.reload()
+        context.close()
+
+    def test_rewards_are_once_daily_and_support_has_separate_points(self):
+        context=self.browser.new_context()
+        page=context.new_page()
+        page.add_init_script('Math.random=()=>0')
+        page.goto(f'http://127.0.0.1:{self.server.server_port}')
+        page.evaluate("""() => {
+          const date=new Date(),day=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+          const data={version:2,activeLearnerId:'kodjo',profiles:[{id:'kodjo',name:'Kodjo',year:'Year 6'},{id:'nico',name:'Nico',year:'Year 9'}],progress:{},sessions:[],rewards:{kodjo:{xp:12,credited:{[day+':maths.fractions.equivalent:equivalent:1:2:4']:12},badges:['first-step'],independentAnswers:1}}};
+          localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
+        }""")
+        page.reload();page.locator('[data-action="start-fractions"]').click()
+        page.locator('[data-action="check-answer"]').click()  # Empty input earns nothing.
+        self.assertIn('12 XP',page.locator('.xp-chip').inner_text())
+        self.answer_current(page)
+        self.assertIn('+0 XP',page.locator('.earned-note').inner_text())
+        page.locator('[data-action="next-question"]').click()
+        page.locator('[data-action="hint"]').click();self.answer_current(page)
+        self.assertIn('+6 XP',page.locator('.earned-note').inner_text())
+        page.reload()
+        stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
+        self.assertEqual(stored['rewards']['kodjo']['xp'],18)
+        self.assertEqual(stored['rewards']['kodjo']['independentAnswers'],1)
+        self.assertEqual(stored['rewards']['kodjo']['supportedAnswers'],1)
+        self.assertEqual(stored['rewards']['kodjo']['completedLessons'],0)
+        page.select_option('#profile-select','nico');page.locator('[data-action="start-fractions"]').click()
+        self.answer_current(page)
+        self.assertIn('+12 XP',page.locator('.earned-note').inner_text())
+        page.reload();stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
+        self.assertEqual(stored['rewards']['kodjo']['xp'],18)
+        self.assertEqual(stored['rewards']['nico']['xp'],12)
+        context.close()
+
+    def test_daily_cap_and_level_survive_reload_without_blocking_practice(self):
+        context=self.browser.new_context()
+        page=context.new_page()
+        page.goto(f'http://127.0.0.1:{self.server.server_port}')
+        page.evaluate("""() => {
+          const date=new Date(),day=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+          const data={version:2,activeLearnerId:'kodjo',profiles:[{id:'kodjo',name:'Kodjo',year:'Year 6'}],progress:{},sessions:[],rewards:{kodjo:{xp:94,credited:{[day+':old:question']:94},badges:[]}}};
+          localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
+        }""")
+        page.reload();page.locator('[data-action="start-fractions"]').click();self.answer_current(page)
+        self.assertIn('+6 XP',page.locator('.earned-note').inner_text())
+        page.reload()
+        self.assertIn('Level 2',page.locator('.xp-progress-label').inner_text())
+        page.locator('[data-action="start-fractions"]').click();self.answer_current(page)
+        self.assertIn('+0 XP',page.locator('.earned-note').inner_text())
+        self.assertIn('Daily points limit',page.locator('.earned-note').inner_text())
+        stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
+        self.assertEqual(stored['rewards']['kodjo']['xp'],100)
+        self.assertEqual(stored['progress']['kodjo::maths.fractions.equivalent']['attempts'],2)
+        context.close()
+
+    def test_starter_question_credit_is_preserved_after_id_migration(self):
+        context=self.browser.new_context()
+        page=context.new_page();page.add_init_script('Math.random=()=>0')
+        page.goto(f'http://127.0.0.1:{self.server.server_port}')
+        page.evaluate("""() => {
+          const date=new Date(),day=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+          const data={version:2,activeLearnerId:'kodjo',profiles:[{id:'kodjo',name:'Kodjo',year:'Year 6'}],progress:{},sessions:[],rewards:{kodjo:{xp:12,credited:{[day+':maths.fractions.add-unlike:f01']:12},badges:['first-step']}}};
+          localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
+        }""")
+        page.reload();page.locator('[data-action="start-fractions"]').click()
+        for _ in range(2):
+            self.answer_current(page);page.locator('[data-action="next-question"]').click()
+        self.assertEqual(page.locator('h1').inner_text(),'What is 1/2 + 1/4?')
+        self.answer_current(page)
+        self.assertIn('+0 XP',page.locator('.earned-note').inner_text())
+        stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
+        self.assertEqual(stored['rewards']['kodjo']['xp'],36)
+        self.assertEqual(stored['progress']['kodjo::maths.fractions.add-unlike']['attempts'],1)
         context.close()
 
 if __name__ == '__main__':

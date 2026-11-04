@@ -1,4 +1,4 @@
-import {addFractions, lcm, fmt} from './fractions.js';
+import {addFractions, lcm, fmt, bank} from './fractions.js';
 import {initialDifficulty} from './adaptive.js';
 
 export const RECENT_QUESTION_LIMIT = 12;
@@ -15,6 +15,7 @@ const bounds = {
   4:{denominator:24, common:144, factor:6}
 };
 const cache = new Map();
+const legacyAdditionIds=new Map(bank.map(q=>[`addition:${q.a.n}:${q.a.d}:${q.b.n}:${q.b.d}`,q.id]));
 export function questionPool(skillId, difficulty=1) {
   if(!['equivalent','common-denominator','add-unlike'].some(s=>skillId===prefix+s)) throw new Error('Unknown fraction skill');
   if(!bounds[difficulty]) throw new Error('Invalid question difficulty');
@@ -38,7 +39,8 @@ export function questionPool(skillId, difficulty=1) {
       const first={n,d:a},second={n:m,d:b};
       q={id:`addition:${n}:${a}:${m}:${b}`,skillId,kind:'addition',a:first,b:second,prompt:`What is ${fmt(first)} + ${fmt(second)}?`,answer:addFractions(first,second)};
     }
-    questions.set(q.id,Object.freeze({...q,difficulty}));
+    for(const value of [q.a,q.b,q.answer])if(value&&typeof value==='object')Object.freeze(value);
+    questions.set(q.id,Object.freeze({...q,difficulty,rewardId:legacyAdditionIds.get(q.id)||q.id}));
   }
   if(difficulty===1)for(const [a,b] of seedPairs) add(a,b);
   for(let a=2;a<=limit.denominator;a++) for(let b=a+1;b<=(skillId===prefix+'equivalent'?limit.common:limit.denominator);b++) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {questionPool, questionFor, selectQuestion, difficultyFor, RECENT_QUESTION_LIMIT} from '../src/engine/questions.js';
-import {skillGraph, createSession, nextQuestion, submitAnswer} from '../src/engine/diagnostic.js';
+import {skillGraph, assess, createSession, nextQuestion, submitAnswer} from '../src/engine/diagnostic.js';
 const id=skillGraph[0].id;
 const options={random:()=>0,year:'Year 6'};
 test('difficulty uses component mastery, never attempts, XP, level or age alone',()=>{
@@ -22,6 +22,7 @@ test('all year and mastery pools are varied, unique, exact and bounded by input 
    assert.ok(pool.length>24,`${skill.id} level ${level} needs repeat-safe variety`);
    assert.equal(new Set(pool.map(q=>q.id)).size,pool.length);
    for(const q of pool){
+     assert.equal(assess(q,q.answer).correct,true,q.id);
      const values=[q.a.n,q.a.d,...(q.b?[q.b.n,q.b.d]:[q.target]),...(typeof q.answer==='number'?[q.answer]:[q.answer.n,q.answer.d])];
      assert.ok(values.every(v=>Number.isSafeInteger(v)&&v>0&&v<=999),q.id);
      assert.ok(q.a.d<=24&&(!q.b||q.b.d<=24));

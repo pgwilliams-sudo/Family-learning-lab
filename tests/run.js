@@ -2,3 +2,5 @@
 import './fractions.test.js';
 import './diagnostic.test.js';
 import './questions.test.js';
+import './rewards.test.js';
+import './storage.test.js';
