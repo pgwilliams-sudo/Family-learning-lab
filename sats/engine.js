@@ -66,18 +66,18 @@ function reading(count,seen,rng,used){
 }
 // Produce three genuinely skill-specific follow-up items for a missed component.
 // Each result uses the same deterministic marking as the original test.
-export function practiceForSkill(skill,seed,recentIds=[],count=3){
+export function practiceForSkill(skill,seed,recentIds=[],count=3,section=null){
  const rng=seeded(seed),seen=new Set(recentIds),used=new Set();
- const mathsTemplates=[...arith,...reasoning].filter(make=>make(seeded('detect-skill')).skill===skill);
+ const mathsTemplates=[...arith,...reasoning].filter(make=>{const item=make(seeded('detect-skill'));return item.skill===skill&&(!section||item.section===section);});
  if(mathsTemplates.length)return maths(mathsTemplates,count,seen,rng,used);
  const english=grammar.filter(item=>item.skill===skill);
- if(english.length)return bankPick(english,count,seen,rng,used);
- if(skill==='spelling'){
+ if(english.length&&(!section||section==='gps'))return bankPick(english,count,seen,rng,used);
+ if(skill==='spelling'&&(!section||section==='spelling')){
    const words=spellings.map((item,i)=>({id:`spell-${i}`,section:'spelling',skill:'spelling',prompt:'Listen to the word and spell it.',type:'spelling',answer:item.word,sentence:item.sentence,explanation:`Correct spelling: ${item.word}.`,marks:1}));
    return bankPick(words,count,seen,rng,used);
  }
  const readSkills=new Set(['retrieval','inference','vocabulary','theme','purpose']);
- if(readSkills.has(skill)){
+ if(readSkills.has(skill)&&(!section||section==='reading')){
    const bank=passages.flatMap(p=>p.questions.map(([s,prompt,choices,answer,explanation],i)=>({
      id:`read-${p.id}-${i}`,section:'reading',skill:s,passageTitle:p.title,passage:p.text,prompt,choices,answer,explanation,type:'choice',marks:1
    }))).filter(item=>item.skill===skill);
