@@ -1,6 +1,6 @@
 import {MODULES} from './content.js';
 import {buildTest,mark,breakdown} from './engine.js';
-import {normalizeRewards,awardQuestion,awardLessonComplete} from '../rewards.js';
+import {defaultRewards,awardQuestion,awardLessonComplete} from '../rewards.js';
 
 const KEY='family-learning-lab:v1';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -75,7 +75,7 @@ function finish(){
  const unanswered=state.answers.filter(x=>String(x).trim()==='').length;
  if(unanswered&&!confirm(`${unanswered} question(s) unanswered. Finish and mark them as incorrect?`))return;
  let score=0,xp=0;const stats=breakdown(state.test,state.answers);
- const rewards=normalizeRewards(data.rewards[learnerId]);
+ const rewards=data.rewards[learnerId]||defaultRewards();
  let rewardState=rewards;
  for(let i=0;i<state.test.questions.length;i++){
    const item=state.test.questions[i],correct=mark(item,state.answers[i]);if(correct)score++;
