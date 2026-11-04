@@ -1,5 +1,7 @@
 import {grammar,spellings,passages,MODULES} from './content.js';
 import {createExtraReasoning} from './reasoning-extra.js';
+import {LONG_PASSAGES} from './extended-reading.js';
+import {createExtendedReasoning} from './extended-maths.js';
 const randInt=(rng,min,max)=>min+Math.floor(rng()*(max-min+1));
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 const fraction=(n,d)=>{const k=gcd(n,d);return `${n/k}/${d/k}`;};
@@ -86,6 +88,28 @@ export function practiceForSkill(skill,seed,recentIds=[],count=3,section=null){
  return [];
 }
 
+function extendedReading(seen,rng){
+ const ranked=shuffle(LONG_PASSAGES,rng).sort((a,b)=>{
+  const ac=a.questions.reduce((n,_,i)=>n+(seen.has(`ext-read-${a.id}-${i}`)?0:1),0);
+  const bc=b.questions.reduce((n,_,i)=>n+(seen.has(`ext-read-${b.id}-${i}`)?0:1),0);
+  return bc-ac;
+ });
+ return ranked.slice(0,2).flatMap(p=>p.questions.map((item,i)=>({
+  ...item,id:`ext-read-${p.id}-${i}`,section:'reading',
+  passageTitle:p.title,passage:p.text,genre:p.genre,level:p.level,
+  explanation:item.explanation||item.example,
+  marks:item.marks||1
+ })));
+}
+function extendedReasoning(rng,seen){
+ const generators=shuffle(createExtendedReasoning(randInt),rng).slice(0,9);
+ return generators.map(make=>{
+  let q=make(rng);
+  for(let attempt=0;attempt<30&&seen.has(q.id);attempt++)q=make(rng);
+  return q;
+ });
+}
+
 export function buildTest(mode,seed,recentIds=[]){
  if(!MODULES.some(m=>m.id===mode))throw Error('Unknown SATs module');
  const rng=seeded(seed),seen=new Set(recentIds),used=new Set(),questions=[];
@@ -96,7 +120,9 @@ export function buildTest(mode,seed,recentIds=[]){
    add(bankPick(grammar,2,seen,rng,used));
    add(reading(2,seen,rng,used));
    add(bankPick(spellings.map((s,i)=>({id:`spell-${i}`,section:'spelling',skill:'spelling',prompt:'Listen to the word and spell it.',type:'spelling',answer:s.word,sentence:s.sentence,explanation:`Correct spelling: ${s.word}.`,marks:1})),1,seen,rng,used));
- } else if(mode==='arithmetic')add(maths(arith,12,seen,rng,used));
+ } else if(mode==='reading-extended')add(extendedReading(seen,rng));
+ else if(mode==='reasoning-extended')add(extendedReasoning(rng,seen));
+ else if(mode==='arithmetic')add(maths(arith,12,seen,rng,used));
  else if(mode==='reasoning')add(maths(reasoning,10,seen,rng,used));
  else if(mode==='fractions'){add(maths([arith[5],arith[6]],6,seen,rng,used));add(maths([reasoning[6]],4,seen,rng,used));}
  else if(mode==='gps')add(bankPick(grammar,12,seen,rng,used));
