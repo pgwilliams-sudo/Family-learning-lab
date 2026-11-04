@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {load,save} from '../src/storage.js';
+import {load,save} from './storage.js';
 
 test('v0.1 saved progress migrates without losing either learner',()=>{
  const store=new Map();
