@@ -1,4 +1,4 @@
-import {hintFor,workedSolution,fmt,addFractions} from '../engine/fractions.js';
+import {hintFor,workedSolution,fmt,addFractions} from './fractions.js';
 /**
  * Content tutor for V1. The next phase can implement an LLM adapter returning this
  * same shape, but scoring and mastery remain deterministic. NEVER put API keys here.
