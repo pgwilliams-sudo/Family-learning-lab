@@ -2,7 +2,7 @@
 
 A family-first, modular adaptive tutor prototype. Built to grow with learners, not to grow a complicated backend before it's needed.
 
-## What works in v0.1
+## What works in v0.2
 
 - Separate profiles for Kodjo (Year 6) and Nico (Year 9); add more local learners in Parent view.
 - Subject catalogue with Maths active and a clear path to add more subjects.
@@ -11,9 +11,11 @@ A family-first, modular adaptive tutor prototype. Built to grow with learners, n
 - Difficulty adjusts during a session. It also starts at a different level next time based on estimated mastery.
 - Parent view with per-learner progress, attempts, hints and recent completed sessions.
 - Local-only persistence using browser `localStorage` and JSON data export.
-- No adverts, leaderboard, unrestricted chat, analytics or API keys.
+- A modular **XP and badge system**: independent answers (+12 XP), supported answers (+6 XP), perseverance after a challenging question (+2 XP) and a harder independent question (+4 bonus XP). First-step, independent-thinker, persistence, return-to-learning, lesson-completion and mastery badges.
+- Daily 100 XP cap and no duplicate XP for the same question on the same local day, while retaining full teaching/practice. A question can earn XP again on another day to encourage spaced review. Each learner has their own points, level, badges and history.
+- No adverts, public leaderboard, unrestricted chat, analytics or API keys.
 
-**Scope note:** This is an *adaptive, authored tutor prototype*, **not yet a live generative AI tutor**. All fraction maths is verified using deterministic code. The LLM integration should be a later server-side module with a clear interface and safeguards. The mastery percentage is an informal progress estimate, not a validated psychometric score.
+**Scope note:** This is an *adaptive, authored tutor prototype*, **not yet a live generative AI tutor**. All fraction maths is verified using deterministic code. The LLM integration should be a later server-side module with a clear interface and safeguards. The mastery percentage is an informal progress estimate, not a validated psychometric score. **XP is motivational, not a measure of intelligence, ability or academic attainment.**
 
 ## Run locally
 
@@ -37,10 +39,20 @@ For an iPad, the app needs to be hosted on a reachable HTTPS site to use it dire
 
 - **Subject modules:** `src/data/catalog.js` lists subjects and skills. Add more topic banks/modules without changing the page shell.
 - **Assessment correctness:** `src/engine/fractions.js` owns exact fraction arithmetic, question selection, hints and worked solutions.
-- **Adaptation:** `src/engine/adaptive.js` owns mastery calculation and the difficulty policy. This can become a richer skill/prerequisite graph later.
+- **Adaptation:** `src/engine/adaptive.js` owns mastery calculation and the difficulty policy. `src/engine/rewards.js` separately owns deterministic XP, badges, levels and limits. This can become a richer skill/prerequisite graph later.
 - **Tutor:** `src/tutor/feedback.js` is the authored tutoring adapter. Upgrade to server-side AI later, while *keeping evaluation deterministic*.
 - **Persistence:** `src/storage.js` is the only local data layer. Replace with a small remote service for multi-device sync when needed.
 - **UI:** `src/app.js`, `src/styles.css`. The plain ES module architecture avoids a build chain for a small app; Codex can migrate to React/TypeScript if justified by growth.
+
+## Gamification behaviour
+
+- Independently correct first attempt, no hints: **12 XP** (plus **4 XP** for difficulty 3–4).
+- Correct after a hint or a second attempt: **6 XP**.
+- Still learning after two tries: **2 XP** for perseverance.
+- Once-per-question-per-day rewards; up to **100 XP per local day**; **100 XP per level**. It is always possible to practise after reaching the cap.
+- Badges recognise first question, five independent answers, five supported/challenging questions, three distinct practice days, completing a lesson, and reaching 75% estimated mastery in a skill. Badges are awarded once, per child.
+- No shared rankings or guilt-inducing daily-streak resets. Points do not affect adaptive difficulty or mastery.
+- v0.1 learner progress is preserved automatically in localStorage; data backups now include separate rewards.
 
 ## Next milestones for Codex
 
@@ -49,7 +61,8 @@ For an iPad, the app needs to be hosted on a reachable HTTPS site to use it dire
 3. **English and Science:** subject-specific answer engines, such as rubric-assisted writing tasks, rather than forcing every subject into a maths-style right/wrong question.
 4. **Optional remote sync:** small backend with learner accounts and basic access controls only when several devices/friends need shared data.
 5. **AI tutor adapter:** a secure server endpoint, constrained instructions, safe/age-appropriate responses, no exposed API key, parent oversight and limits on personal data. The language model explains; verified question engines score.
-6. **Browser integration tests** for checking, retrying, switching learner and saving progress. Don't conflate a hint-assisted answer with independent mastery.
+6. **Gamified learning expansion:** make new subject modules emit verified outcome events to the shared rewards engine. Add optional earned rewards for retained mastery, parent-adjustable rewards and non-competitive weekly goals, without incentivising rapid guessing.
+7. **Browser integration tests** for checking, retrying, switching learner and saving progress. Don't conflate a hint-assisted answer with independent mastery.
 
 ## Privacy and deployment boundaries
 
