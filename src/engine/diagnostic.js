@@ -1,20 +1,10 @@
-import {equalFractions, addFractions, lcm, fmt} from './fractions.js';
+import {equalFractions, fmt} from './fractions.js';
 import {skillGraph, skillById} from '../data/fraction-skills.js';
 import {defaultSkillProgress, evaluateAttempt} from './adaptive.js';
+import {selectQuestion, RECENT_QUESTION_LIMIT} from './questions.js';
+export {questionFor} from './questions.js';
 export const REVIEW_DAYS = 3;
 const day = 86400000;
-// Distinct examples for screening, confirmation, guided practice and independent checks.
-const pairs = [[2,4],[3,6],[4,8],[5,10],[3,9],[4,12],[5,15],[6,12]];
-export function questionFor(skillId, index=0) {
-  const [baseA,baseB]=pairs[index % pairs.length];
-  const round=Math.floor(index/pairs.length);
-  const a=baseA+round;
-  const b=skillId===skillGraph[0].id ? a*(baseB/baseA) : baseB+round;
-  if(skillId===skillGraph[0].id) return {id:`equivalent-${index}`,skillId,kind:'equivalent',a:{n:1,d:a},target:b,prompt:`Write 1/${a} with denominator ${b}.`,answer:{n:b/a,d:b}};
-  if(skillId===skillGraph[1].id) return {id:`denominator-${index}`,skillId,kind:'denominator',a:{n:1,d:a},b:{n:1,d:b},prompt:`Give a common denominator for 1/${a} and 1/${b}. Enter a whole number.`,answer:lcm(a,b)};
-  const first={n:1,d:a},second={n:1,d:b};
-  return {id:`addition-${index}`,skillId,kind:'addition',a:first,b:second,prompt:`What is ${fmt(first)} + ${fmt(second)}?`,answer:addFractions(first,second)};
-}
 export function assess(q, answer) {
   answer ??= {n:NaN,d:NaN};
   if(q.kind==='denominator') {
@@ -36,20 +26,23 @@ export function recommendation(progress, now=new Date().toISOString()) {
   const s=due||skillGraph[2];
   return {skillId:s.id,title:s.title,reason:due?'A delayed retention check is due.':'Practise independently, then revisit after three days.'};
 }
-export function createSession(progress={}, now=new Date().toISOString()) {
+export function createSession(progress={}, now=new Date().toISOString(), options={}) {
   const due=skillGraph.filter(s=>progress[s.id]?.secure && Date.parse(progress[s.id].reviewAt)<=Date.parse(now));
-  const offset=skillGraph.reduce((total,s)=>total+(progress[s.id]?.attempts||0),0)*pairs.length;
-  return {phase:due.length?'revisit':'diagnostic',queue:(due.length?due:skillGraph).map((s,i)=>questionFor(s.id,offset+i)),history:[],question:null,tries:0,hint:false,done:false,progress:structuredClone(progress),startedAt:now,sequence:offset+3};
+  return {phase:due.length?'revisit':'diagnostic',queue:(due.length?due:skillGraph).map(s=>({skillId:s.id})),history:[],seen:[],question:null,tries:0,hint:false,done:false,progress:structuredClone(progress),startedAt:now,year:options.year||'Year 6',random:options.random||Math.random};
 }
 export function nextQuestion(s) {
   if(!s.queue.length) {
     if(s.phase==='diagnostic'||s.phase==='revisit') {s.target=recommendation(s.progress).skillId;s.phase='teach';return;}
-    if(s.phase==='practise') {s.phase='test';s.queue=[questionFor(s.target,s.sequence++),questionFor(s.target,s.sequence++)];}
+    if(s.phase==='practise') {s.phase='test';s.queue=[{skillId:s.target},{skillId:s.target}];}
     else {s.phase='summary';return;}
   }
-  s.question=s.queue.shift();s.tries=0;s.hint=false;s.done=false;s.draft={n:'',d:''};s.feedback='';
+  const request=s.queue.shift();
+  const question=selectQuestion(request.skillId,{progress:s.progress[request.skillId],year:s.year,seen:s.seen,random:s.random});
+  if(!question){s.phase='summary';s.exhausted=true;return;}
+  s.question={...question,confirmation:request.confirmation||false};s.seen.push(question.id);
+  s.tries=0;s.hint=false;s.done=false;s.draft={n:'',d:''};s.feedback='';
 }
-export function beginPractice(s) {s.phase='practise';s.queue=[questionFor(s.target,s.sequence++),questionFor(s.target,s.sequence++)];nextQuestion(s);}
+export function beginPractice(s) {s.phase='practise';s.queue=[{skillId:s.target},{skillId:s.target}];nextQuestion(s);}
 export function submitAnswer(s, answer, now=new Date().toISOString()) {
   if(s.done||!s.question||['teach','summary'].includes(s.phase))return;
   s.tries++;
@@ -72,11 +65,14 @@ export function submitAnswer(s, answer, now=new Date().toISOString()) {
   const suspected=signals.at(-1)||null;
   // Confirmation requires evidence from a different question, not a second try.
   const confirmed=suspected&&previousSignals.includes(suspected);
-  s.progress[id]={...evaluateAttempt(prior,{correct:result.correct,attempts:s.tries,hint:s.hint},now),independentStreak:streak,checkStreak,secure,signals:signalsAll,diagnosis:suspected?{code:suspected,status:confirmed?'likely':'needs-confirmation'}:prior.diagnosis,reviewAt:secure?new Date(Date.parse(now)+REVIEW_DAYS*day).toISOString():null};
-  s.history.push({skillId:id,questionId:s.question.id,phase:s.phase,correct:result.correct,independent,hint:s.hint,attempts:s.tries,evidence:s.evidence});
+  const assessed=evaluateAttempt(prior,{correct:result.correct,attempts:s.tries,hint:s.hint},now);
+  // Support is useful practice, but cannot raise challenge without independent evidence.
+  if(result.correct&&!independent) assessed.mastery=prior.mastery;
+  s.progress[id]={...assessed,recentQuestionIds:[...(prior.recentQuestionIds||[]),s.question.id].slice(-RECENT_QUESTION_LIMIT),independentStreak:streak,checkStreak,secure,signals:signalsAll,diagnosis:suspected?{code:suspected,status:confirmed?'likely':'needs-confirmation'}:prior.diagnosis,reviewAt:secure?new Date(Date.parse(now)+REVIEW_DAYS*day).toISOString():null};
+  s.history.push({skillId:id,questionId:s.question.id,difficulty:s.question.difficulty,phase:s.phase,correct:result.correct,independent,hint:s.hint,attempts:s.tries,evidence:s.evidence});
   s.evidence=[];s.done=true;
   if((s.phase==='diagnostic'||s.phase==='revisit')&&!independent&&!s.question.confirmation) {
-    s.queue.unshift({...questionFor(id,s.sequence++),confirmation:true});
+    s.queue.unshift({skillId:id,confirmation:true});
     s.feedback+=' We will use a different question to check before drawing a conclusion.';
   }
   if(s.phase==='test'&&!independent) s.feedback+=' We will keep this skill as a practice target; supported answers do not establish independent mastery.';

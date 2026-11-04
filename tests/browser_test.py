@@ -2,6 +2,9 @@
 Run with `npm run test:browser` (Python Playwright and Chromium required).
 """
 import functools
+import re
+import math
+from fractions import Fraction
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import threading
@@ -25,6 +28,24 @@ class BrowserFlow(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
+    def answer_current(self,page,denominator_only=False):
+        prompt=page.locator('h1').inner_text()
+        values=[int(v) for v in re.findall(r'\d+',prompt)]
+        if prompt.startswith('Write'):
+            n,d,target=values
+            top=n if denominator_only else n*(target//d)
+            page.locator('#numerator').fill(str(top))
+            page.locator('#denominator').fill(str(target))
+        elif prompt.startswith('Give'):
+            _,a,_,b=values
+            page.locator('#numerator').fill(str(math.lcm(a,b)))
+        else:
+            n,a,m,b=values
+            result=Fraction(n,a)+Fraction(m,b)
+            page.locator('#numerator').fill(str(result.numerator))
+            page.locator('#denominator').fill(str(result.denominator))
+        page.locator('[data-action="check-answer"]').click()
+
     def test_diagnostic_remediation_and_profile_isolation(self):
         context = self.browser.new_context(viewport={'width':390, 'height':844})
         page = context.new_page()
@@ -33,26 +54,22 @@ class BrowserFlow(unittest.TestCase):
         page.goto(f'http://127.0.0.1:{self.server.server_port}')
         def click(action):
             page.locator(f'[data-action="{action}"]').first.click()
-        def answer(n, d=None):
-            page.locator('#numerator').fill(str(n))
-            if d is not None: page.locator('#denominator').fill(str(d))
-            click('check-answer')
+        def answer(wrong=False):
+            self.answer_current(page,wrong)
         click('start-fractions')
-        # Retry the known denominator-only misconception, then confirm on a new item.
-        answer(1,4)
+        answer(wrong=True)
         self.assertIn('same factor',page.locator('[role=status]').inner_text())
-        answer(1,4)
+        answer(wrong=True)
         click('next-question')
-        answer(1,10);answer(1,10)
+        answer(wrong=True);answer(wrong=True)
         click('next-question')
-        # Common denominators and addition are assessed independently.
-        answer(6);click('next-question');answer(3,8);click('next-question')
+        answer();click('next-question');answer();click('next-question')
         self.assertIn('Equivalent fractions', page.locator('h1').inner_text())
         click('begin-practice')
-        click('hint');answer(3,9);click('next-question')
-        answer(3,12);click('next-question')
-        answer(3,15);click('next-question')
-        answer(2,12);click('next-question')
+        click('hint');answer();click('next-question')
+        answer();click('next-question')
+        answer();click('next-question')
+        answer();click('next-question')
         self.assertIn('A useful next step',page.locator('h1').inner_text())
         stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
         progress=stored['progress']['kodjo::maths.fractions.equivalent']
@@ -64,7 +81,7 @@ class BrowserFlow(unittest.TestCase):
         self.assertIn('Recommended next exercise',page.locator('main').inner_text())
         self.assertIn('Common denominators',page.locator('main').inner_text())
         page.select_option('#profile-select','nico')
-        click('start-fractions');answer(2,4)
+        click('start-fractions');answer()
         page.reload()
         saved=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
         self.assertEqual(saved['progress']['kodjo::maths.fractions.equivalent'],progress)
@@ -97,6 +114,51 @@ class BrowserFlow(unittest.TestCase):
         self.assertIsNone(saved['progress']['kodjo::maths.fractions.equivalent']['reviewAt'])
         page.locator('[data-action="parent"]').click()
         self.assertIn('Equivalent fractions. Build this prerequisite',page.locator('main').inner_text())
+        context.close()
+
+    def test_difficulty_progression_and_age_ceilings(self):
+        context=self.browser.new_context()
+        page=context.new_page()
+        page.goto(f'http://127.0.0.1:{self.server.server_port}')
+        page.evaluate("""() => {
+          const data={version:1,activeLearnerId:'kodjo',profiles:[{id:'kodjo',name:'Kodjo',year:'Year 6'},{id:'nico',name:'Nico',year:'Year 9'}],progress:{'kodjo::maths.fractions.equivalent':{mastery:34,attempts:100000}},sessions:[]};
+          localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
+        }""")
+        page.reload();page.locator('[data-action="start-fractions"]').click()
+        self.assertIn('LEVEL 1',page.locator('.eyebrow').last.inner_text())
+        self.answer_current(page)
+        page.locator('[data-action="home"]').first.click()
+        page.locator('[data-action="start-fractions"]').click()
+        self.assertIn('LEVEL 2',page.locator('.eyebrow').last.inner_text())
+        page.evaluate("""() => {
+          const data=JSON.parse(localStorage.getItem('family-learning-lab:v1'));
+          data.progress['kodjo::maths.fractions.equivalent'].mastery=90;
+          data.progress['nico::maths.fractions.equivalent']={mastery:90,attempts:1};
+          localStorage.setItem('family-learning-lab:v1',JSON.stringify(data));
+        }""")
+        page.reload();page.locator('[data-action="start-fractions"]').click()
+        self.assertIn('LEVEL 3',page.locator('.eyebrow').last.inner_text())
+        page.select_option('#profile-select','nico');page.locator('[data-action="start-fractions"]').click()
+        self.assertIn('LEVEL 4',page.locator('.eyebrow').last.inner_text())
+        context.close()
+
+    def test_repeat_limits_persist_through_reload_without_attempt_escalation(self):
+        context=self.browser.new_context()
+        page=context.new_page()
+        page.goto(f'http://127.0.0.1:{self.server.server_port}')
+        recent=[]
+        for _ in range(14):
+            page.locator('[data-action="start-fractions"]').click()
+            self.assertIn('LEVEL 1',page.locator('.eyebrow').last.inner_text())
+            for _ in range(2):
+                page.locator('#numerator').fill('99');page.locator('#denominator').fill('97')
+                page.locator('[data-action="check-answer"]').click()
+            stored=page.evaluate("JSON.parse(localStorage.getItem('family-learning-lab:v1'))")
+            ids=stored['progress']['kodjo::maths.fractions.equivalent']['recentQuestionIds']
+            self.assertNotIn(ids[-1],recent[-12:])
+            recent.append(ids[-1])
+            self.assertLessEqual(len(ids),12)
+            page.reload()
         context.close()
 
 if __name__ == '__main__':

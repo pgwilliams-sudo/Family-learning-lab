@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {skillGraph,questionFor,assess,recommendation,createSession,nextQuestion,beginPractice,submitAnswer} from '../src/engine/diagnostic.js';
+import {skillGraph,questionFor,assess,recommendation,createSession as sessionFactory,nextQuestion,beginPractice,submitAnswer} from '../src/engine/diagnostic.js';
 const [equivalent,denominator,addition]=skillGraph.map(s=>s.id);
 const at='2026-11-04T12:00:00.000Z';
+const createSession=(progress={},now=at)=>sessionFactory(progress,now,{random:()=>0});
 function answer(s,correct=true){const a=correct?s.question.answer:s.question.kind==='denominator'?1:{n:99,d:97};submitAnswer(s,a,at);if(!s.done)submitAnswer(s,a,at);nextQuestion(s);}
 test('graph is ordered, acyclic, and routes to the earliest missing prerequisite',()=>{
  const seen=new Set();for(const s of skillGraph){for(const p of s.prerequisites)assert.ok(seen.has(p));seen.add(s.id);}
@@ -55,7 +56,7 @@ test('hints and failed checks prevent independent security and retain remediatio
 test('due retention checks use new examples and regression reopens prerequisites',()=>{
  const p=Object.fromEntries(skillGraph.map(s=>[s.id,{secure:true,checkStreak:2,reviewAt:'2026-11-07T12:00:00.000Z'}]));
  assert.equal(createSession(p,at).phase,'diagnostic');
- p[equivalent].attempts=7;
+ p[equivalent].attempts=7;p[equivalent].recentQuestionIds=[questionFor(equivalent).id];
  const s=createSession(p,'2026-11-08T12:00:00Z');assert.equal(s.phase,'revisit');nextQuestion(s);assert.notEqual(s.question.id,questionFor(equivalent).id);assert.notDeepEqual(s.question.answer,questionFor(equivalent).answer);answer(s,false);
  assert.equal(s.progress[equivalent].secure,false);assert.equal(p[equivalent].secure,true);
  assert.equal(recommendation(s.progress).skillId,equivalent);

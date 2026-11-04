@@ -52,7 +52,7 @@ function componentProgress(profileId=data.activeLearnerId){
 }
 function startSession(skillId){
   if(!getSkill(skillId)?.available)return;
-  session=createSession(componentProgress());session.skillId=skillId;session.profileId=data.activeLearnerId;
+  session=createSession(componentProgress(),new Date().toISOString(),{year:learner().year});session.skillId=skillId;session.profileId=data.activeLearnerId;
   nextQuestion(session);view='lesson';alertMessage='';render();
 }
 function persistSession(){
@@ -71,10 +71,10 @@ function lesson(){
     body=`<span class="eyebrow">TARGETED MINI-LESSON</span><h1>${escapeHTML(sk.title)}</h1><p>${escapeHTML(sk.lesson)}</p><div class="fraction-bars"><div><label>One half</label>${fractionStrip({n:1,d:2})}</div><div><label>Two quarters: the same amount</label>${fractionStrip({n:2,d:4})}</div></div><p>Explain the idea aloud, then try two guided questions and two independent checks.</p>${actionButton('begin-practice','Practise this skill →')}`;
   }else if(phase==='summary'){
     const next=recommendation(session.progress);
-    body=`<span class="eyebrow">SESSION COMPLETE</span><h1>A useful next step</h1><p>${escapeHTML(next.title)}: ${escapeHTML(next.reason)}</p>${componentSummary(session.profileId)}<p>Independent success is checked again after three days. Return here for a retention check when it is due.</p>${actionButton('start-again','Start another session','btn-secondary')}${actionButton('home','Back home')}`;
+    body=`<span class="eyebrow">SESSION COMPLETE</span><h1>A useful next step</h1>${session.exhausted?'<p>We have used the available new examples for this level. Take a break before reviewing.</p>':''}<p>${escapeHTML(next.title)}: ${escapeHTML(next.reason)}</p>${componentSummary(session.profileId)}<p>Independent success is checked again after three days. Return here for a retention check when it is due.</p>${actionButton('start-again','Start another session','btn-secondary')}${actionButton('home','Back home')}`;
   }else{
     const q=session.question;
-    body=`<span class="eyebrow">${escapeHTML(phase==='revisit'?'RETENTION CHECK':phase.toUpperCase())} · ${escapeHTML(skillById(q.skillId).title)}</span><h1>${escapeHTML(q.prompt)}</h1><p>${phase==='diagnostic'?'A short check of each component skill. Different follow-up questions help us avoid guessing the cause of a mistake.':phase==='test'?'Try this without help. A hint is always available, but supported answers stay separate.':'Take your time and explain your method aloud.'}</p>
+    body=`<span class="eyebrow">${escapeHTML(phase==='revisit'?'RETENTION CHECK':phase.toUpperCase())} · ${escapeHTML(skillById(q.skillId).title)} · LEVEL ${q.difficulty}</span><h1>${escapeHTML(q.prompt)}</h1><p>${phase==='diagnostic'?'A short check of each component skill. Different follow-up questions help us avoid guessing the cause of a mistake.':phase==='test'?'Try this without help. A hint is always available, but supported answers stay separate.':'Take your time and explain your method aloud.'}</p>
     <div class="answer-panel"><label for="numerator">${q.kind==='denominator'?'Common denominator':'Numerator'}</label><input type="number" id="numerator" min="0" max="999" inputmode="numeric" value="${escapeHTML(session.draft.n)}" ${session.done?'disabled':''}/>${q.kind!=='denominator'?`<label for="denominator">Denominator</label><input type="number" id="denominator" min="1" max="999" inputmode="numeric" value="${escapeHTML(session.draft.d)}" ${session.done?'disabled':''}/>`:''}</div>
     <div class="tutor-message" role="status" aria-live="polite">${escapeHTML(session.feedback||'Write your answer, then check it. A second try is available.')}</div>
     ${session.done?`<p>Verified answer: ${escapeHTML(answerText(q))}</p>${actionButton('next-question','Continue →')}`:`<div class="question-actions">${actionButton('hint','Give me a hint','btn-outline')}${actionButton('check-answer','Check my answer →')}</div>`}`;
