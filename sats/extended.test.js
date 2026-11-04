@@ -37,6 +37,7 @@ test('extended reasoning has nine distinct mathematically correct 2-3 mark quest
    assert.equal(q.criteria.length,q.marks-1,q.id);
    assert.ok(Number.isFinite(Number(q.answer)),q.id);
    assert.ok(Number(q.answer)>=0,q.id);
+   assert.ok(Math.abs(Number(q.answer)*100-Math.round(Number(q.answer)*100))<1e-6,'Expected exact answer with at most 2 dp: '+q.id);
    assert.ok(mark(q,q.answer),q.id);
   });
  }
