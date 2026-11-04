@@ -79,7 +79,7 @@ function testScreen(){
 }
 function storeResponse(value){const s=active();if(!s)return;s.answers[s.current]=value;save();}
 function speak(){
- const s=active();if(!s)return;const q=s.test.questions[s.current];if(q.type!=='spelling')return;
+ const s=view==='lesson'?activeLesson():active();if(!s)return;const q=view==='lesson'?s.questions[s.cursor]:s.test.questions[s.current];if(q.type!=='spelling')return;
  if(!('speechSynthesis' in window)){alert('Audio is unavailable in this browser. Ask an adult to read the word.');return;}
  window.speechSynthesis.cancel();
  const utter=new SpeechSynthesisUtterance(`${q.answer}. ${q.sentence.replace('___',q.answer)}. ${q.answer}.`);
@@ -112,9 +112,89 @@ function result(){
  <section class="panel"><h2>What to practise next</h2>${wrong.length?`<div class="targets">${wrong.slice(0,5).map(([s,v])=>`<button type="button" class="target-link" data-fix="${esc(s)}">${esc(v.skill)} · ${v.correct}/${v.total} · Fix this skill →</button>`).join('')}</div><p>Choose a skill to get a short explanation, guided practice and two independent checks.</p>`:'<p>No errors this time. Keep reviewing regularly and try different modules.</p>'}<p class="note">These are practice accuracy scores, not official SATs scaled scores or predictions.</p></section>
  <section class="panel"><h2>Review every answer</h2><div class="reviews">${rec.test.questions.map((q,i)=>`<details><summary><b class="${mark(q,rec.answers[i])?'right':'wrong'}">${mark(q,rec.answers[i])?'✓':'✕'}</b> ${i+1}. ${esc(q.prompt)}</summary><div><p><strong>Your answer:</strong> ${esc(rec.answers[i]||'(not answered)')}</p><p><strong>Correct answer:</strong> ${esc(q.answer)}</p><p>${esc(q.explanation)}</p></div></details>`).join('')}</div></section>`);
 }
+
+function startLesson(key){
+ const target=parseLessonKey(key);
+ if(!target)return;
+ const existing=activeLesson();
+ if(existing&&existing.stage!=='summary'&&!confirm('Replace your unfinished skill lesson with this one?'))return;
+ const excluded=[...(data.sats.recent[learnerId]||[])];
+ if(reviewRecord?.test?.questions)excluded.push(...reviewRecord.test.questions.map(q=>q.id));
+ const seed=learnerId+':'+day()+':remediation:'+key+':'+Date.now()+':'+Math.random();
+ try{
+  const lesson=createRemediation(target.section,target.skill,seed,excluded);
+  lesson.xpEarned=0;
+  data.sats.activeLessons[learnerId]=lesson;
+  save();view='lesson';render();
+ }catch(err){
+  alert('There are no new practice examples for this skill yet. Please try a related module. '+err.message);
+ }
+}
+function lessonScreen(){
+ const lesson=activeLesson();
+ if(!lesson){view='home';home();return;}
+ shell(renderRemediation(lesson,esc));
+}
+function awardLessonQuestion(lesson){
+ const outcome=lesson.outcomes.at(-1);
+ if(!outcome)return;
+ const current=data.rewards[learnerId]||defaultRewards();
+ const award=awardQuestion(current,{
+  skillId:'sats.remediation.'+outcome.section+'.'+outcome.skill,
+  questionId:outcome.id,correct:outcome.correct,independent:outcome.independent,difficulty:1
+ });
+ data.rewards[learnerId]=award.state;
+ lesson.xpEarned=(lesson.xpEarned||0)+award.earned;
+}
+function recordLesson(lesson){
+ if(lesson.stage!=='summary'||lesson.recorded)return;
+ const summary=remediationSummary(lesson);
+ if(!summary)return;
+ const previous=(data.sats.skillProgress[learnerId]||{})[summary.key]||{};
+ data.sats.skillProgress[learnerId]??={};
+ data.sats.skillProgress[learnerId][summary.key]={...previous,...summary,attempts:(previous.attempts||0)+1};
+ data.sats.lessonHistory[learnerId]??=[];
+ data.sats.lessonHistory[learnerId].unshift({...summary,xp:lesson.xpEarned||0,questionIds:lesson.questions.map(q=>q.id)});
+ data.sats.lessonHistory[learnerId]=data.sats.lessonHistory[learnerId].slice(0,45);
+ data.sats.recent[learnerId]=[...(data.sats.recent[learnerId]||[]),...lesson.questions.map(q=>q.id)].slice(-160);
+ data.rewards[learnerId]=awardLessonComplete(data.rewards[learnerId]||defaultRewards(),{mastery:0}).state;
+ lesson.recorded=true;
+ save();
+}
+
 function render(){if(view==='test')testScreen();else if(view==='review')result();else if(view==='lesson')lessonScreen();else home();}
 root.addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
+
+ if(button.hasAttribute('data-fix')){startLesson(button.dataset.fix);return;}
+ if(button.hasAttribute('data-lesson-resume')){view='lesson';render();return;}
+ if(button.hasAttribute('data-lesson-home')){
+  if(activeLesson()?.stage==='summary')delete data.sats.activeLessons[learnerId];
+  save();view='home';render();return;
+ }
+ if(button.hasAttribute('data-lesson-again')){
+  const old=activeLesson();if(!old)return;delete data.sats.activeLessons[learnerId];
+  startLesson(lessonKey(old.section,old.skill));return;
+ }
+ if(button.hasAttribute('data-lesson-begin')){const s=activeLesson();if(s){beginRemediation(s);save();render();}return;}
+ if(button.hasAttribute('data-lesson-choice')){
+  const s=activeLesson();if(!s||s.done)return;
+  const q=s.questions[s.cursor];s.answer=q.choices[Number(button.dataset.lessonChoice)];save();render();return;
+ }
+ if(button.hasAttribute('data-lesson-hint')){const s=activeLesson();if(s){useHint(s);save();render();}return;}
+ if(button.hasAttribute('data-lesson-submit')){
+  const s=activeLesson();if(!s)return;
+  const result=submitRemediation(s,s.answer);
+  if(!result.accepted){alert('Choose or enter an answer before checking.');return;}
+  if(result.done)awardLessonQuestion(s);
+  save();render();return;
+ }
+ if(button.hasAttribute('data-lesson-next')){
+  const s=activeLesson();if(!s)return;
+  if(nextRemediation(s)&&s.stage==='summary')recordLesson(s);
+  save();render();return;
+ }
+ if(button.hasAttribute('data-lesson-speak')){speak();return;}
  if(button.hasAttribute('data-start')){start(button.dataset.start);return;}
  if(button.hasAttribute('data-resume')){view='test';render();return;}
  if(button.hasAttribute('data-home')){view='home';render();return;}
@@ -125,7 +205,10 @@ root.addEventListener('click',e=>{
  if(button.hasAttribute('data-finish')){finish();return;}
  if(button.hasAttribute('data-review')){reviewRecord=history()[Number(button.dataset.review)];view='review';render();}
 });
-root.addEventListener('input',e=>{if(e.target.id==='answer')storeResponse(e.target.value);});
+root.addEventListener('input',e=>{
+ if(e.target.id==='answer'){storeResponse(e.target.value);return;}
+ if(e.target.id==='lesson-answer'){const s=activeLesson();if(s&&!s.done){s.answer=e.target.value;save();}}
+});
 root.addEventListener('change',e=>{
  if(e.target.id==='who'){learnerId=e.target.value;reviewRecord=null;view='home';render();}
 });
