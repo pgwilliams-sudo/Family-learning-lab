@@ -49,7 +49,8 @@ export function missedSkills(record){
    const id=lessonKey(item.section,item.skill);
    if(!groups.has(id))groups.set(id,{id,section:item.section,skill:item.skill,wrong:0,total:0});
    const bucket=groups.get(id);bucket.total++;
-   if(!mark(item,record.answers[i]))bucket.wrong++;
+   const awarded=record.marksByQuestion?record.marksByQuestion[i]:(mark(item,record.answers[i])?1:0);
+   if(awarded<(item.marks||1))bucket.wrong++;
  });
  return [...groups.values()].filter(x=>x.wrong>0).sort((a,b)=>b.wrong-a.wrong||a.total-b.total||a.id.localeCompare(b.id));
 }
