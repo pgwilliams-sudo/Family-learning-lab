@@ -4,15 +4,21 @@ import {buildTest,mark,breakdown} from './engine.js';
 import {MODULES,grammar,spellings,passages} from './content.js';
 
 test('every SATs module creates unique, correctly marked questions',()=>{
- const lengths={daily:12,arithmetic:12,reasoning:10,fractions:10,gps:12,reading:8,spelling:10};
+ const lengths={daily:12,arithmetic:12,reasoning:10,fractions:10,gps:12,reading:8,spelling:10,'reading-extended':12,'reasoning-extended':9};
  for(const mode of MODULES.map(x=>x.id)){
    const testPaper=buildTest(mode,'year6-test-seed');
    assert.equal(testPaper.questions.length,lengths[mode],mode);
    assert.equal(new Set(testPaper.questions.map(q=>q.id)).size,testPaper.questions.length);
    for(const q of testPaper.questions){
      assert.ok(q.id&&q.skill&&q.section&&q.prompt&&q.explanation);
-     assert.ok(mark(q,q.answer),q.id);
-     assert.equal(mark(q,''),false);
+     if(q.type==='written'){
+       assert.ok(q.criteria?.length===q.marks,q.id);
+       assert.ok(q.example,q.id);
+       assert.equal(mark(q,''),false);
+     }else{
+       assert.ok(mark(q,q.answer),q.id);
+       assert.equal(mark(q,''),false);
+     }
    }
  }
 });
