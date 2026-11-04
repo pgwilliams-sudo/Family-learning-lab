@@ -9,7 +9,9 @@ export const MODULES = [
   {id:'fractions',title:'Fractions & Percentages',icon:'½',time:'12 min',description:'Focused practice for fractions, decimals and percentages.'},
   {id:'gps',title:'Grammar & Punctuation',icon:'✍️',time:'15 min',description:'Sentence structure, clauses, punctuation and vocabulary.'},
   {id:'reading',title:'Reading Comprehension',icon:'📖',time:'20 min',description:'Original passages with retrieval, inference and vocabulary questions.'},
-  {id:'spelling',title:'Spelling',icon:'🔤',time:'10 min',description:'Listen, think and spell common Year 5/6 challenge words.'}
+  {id:'spelling',title:'Spelling',icon:'🔤',time:'10 min',description:'Listen, think and spell common Year 5/6 challenge words.'},
+  {id:'reading-extended',title:'Extended Reading Paper',icon:'📚',time:'35–45 min',description:'Two longer original passages with written responses and 2–3 mark questions.'},
+  {id:'reasoning-extended',title:'Extended Maths Reasoning',icon:'🧮',time:'25–35 min',description:'Nine multi-step problems with answer and method marks.'}
 ];
 const Q=(id,skill,prompt,choices,answer,explanation)=>({id,skill,prompt,choices,answer,explanation,section:'gps',type:'choice'});
 export const grammar = [
