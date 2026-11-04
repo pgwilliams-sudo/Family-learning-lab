@@ -146,7 +146,7 @@ function result(){
  const wrong=missedSkills(rec).map(x=>[x.id,{correct:x.total-x.wrong,total:x.total,skill:x.skill,section:x.section}]);
  shell(`<section class="result-hero"><div class="eyebrow">TEST COMPLETE</div><h1>${rec.score} out of ${rec.total}</h1><p>${percent(rec.score,rec.total)}% correct · +${rec.xp} XP · ${Math.round(rec.durationSeconds/60)} minutes</p><p>${rec.score===rec.total?'Outstanding accuracy! Ready for another challenge?':'Good work completing the test. The interesting part is learning from what you missed.'}</p>${rec.marksByQuestion?extendedResultIntro(rec,esc):''}<div class="hero-actions"><button class="primary" data-start="daily">Try another Daily Challenge</button><button class="secondary" data-home>Back to SATs centre</button></div></section>
  <section class="panel"><h2>What to practise next</h2>${wrong.length?`<div class="targets">${wrong.slice(0,5).map(([s,v])=>`<button type="button" class="target-link" data-fix="${esc(s)}">${esc(v.skill)} · ${v.correct}/${v.total} · Fix this skill →</button>`).join('')}</div><p>Choose a skill to get a short explanation, guided practice and two independent checks.</p>`:'<p>No errors this time. Keep reviewing regularly and try different modules.</p>'}<p class="note">These are practice accuracy scores, not official SATs scaled scores or predictions.</p></section>
- <section class="panel"><h2>Review every answer</h2><div class="reviews">${reviewRows(rec)}
+ <section class="panel"><h2>Review every answer</h2><div class="reviews">${reviewRows(rec)}</div></section>`);
 }
 
 function startLesson(key){
