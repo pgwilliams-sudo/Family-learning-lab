@@ -8,7 +8,7 @@ import {missedSkills} from './remediation.js';
 test('extended reading contains genuinely longer original passages and increasing demand',()=>{
  assert.equal(LONG_PASSAGES.length,6);
  for(const p of LONG_PASSAGES){
-  assert.ok(p.text.trim().split(/\s+/).length>=275,p.id);
+  assert.ok(p.text.trim().split(/\s+/).length>=400,p.id);
   assert.equal(p.questions.length,6);
   assert.deepEqual(p.questions.map(q=>q.marks),[1,1,2,2,3,3]);
   assert.ok(p.questions.filter(q=>q.type==='written').length===4,p.id);
