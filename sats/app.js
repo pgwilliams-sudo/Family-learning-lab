@@ -1,6 +1,8 @@
 import {MODULES} from './content.js';
 import {buildTest,mark,breakdown} from './engine.js';
 import {defaultRewards,awardQuestion,awardLessonComplete} from '../rewards.js';
+import {missedSkills,lessonKey,parseLessonKey,createRemediation,beginRemediation,useHint,submitRemediation,nextRemediation,remediationSummary} from './remediation.js';
+import {renderRemediation} from './lesson-ui.js';
 
 const KEY='family-learning-lab:v1';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,7 +12,7 @@ function readData(){
  try{d=JSON.parse(localStorage.getItem(KEY));}catch{}
  if(!d||!Array.isArray(d.profiles)||!d.progress){d={version:2,activeLearnerId:'kodjo',profiles:[{id:'kodjo',name:'Kodjo',year:'Year 6'}],progress:{},sessions:[],rewards:{}};}
  d.sats??={};
- d.sats.active??={};d.sats.history??={};d.sats.recent??={};d.sats.runCounts??={};d.rewards??={};
+ d.sats.active??={};d.sats.history??={};d.sats.recent??={};d.sats.runCounts??={};d.sats.activeLessons??={};d.sats.lessonHistory??={};d.sats.skillProgress??={};d.rewards??={};
  return d;
 }
 let data=readData();
@@ -18,6 +20,7 @@ let learnerId=data.profiles.some(x=>x.id==='kodjo')?'kodjo':data.activeLearnerId
 let view='home',reviewRecord=null;
 const learner=()=>data.profiles.find(p=>p.id===learnerId)||data.profiles[0];
 const active=()=>data.sats.active[learnerId];
+const activeLesson=()=>data.sats.activeLessons[learnerId];
 const history=()=>data.sats.history[learnerId]||[];
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){alert('Could not save progress. Please export a backup from Learning Lab or free browser storage.');}};
 const day=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
@@ -28,16 +31,28 @@ function nav(){
 }
 function shell(inner){root.innerHTML=`${nav()}<main class="wrap">${inner}</main><footer>Year 6 SATs-style practice · Original questions · No adverts · Scores are not official SATs grades</footer>`;}
 function weakness(){
- const recent=history().slice(0,12),stats={};
- for(const h of recent)for(const [name,v] of Object.entries(h.stats)){const s=stats[name]??={correct:0,total:0};s.correct+=v.correct;s.total+=v.total;}
- return Object.entries(stats).filter(([,s])=>s.total>=2).sort((a,b)=>a[1].correct/a[1].total-b[1].correct/b[1].total).slice(0,3);
+ const stats={};
+ for(const record of history().slice(0,12)){
+  record.test?.questions?.forEach((q,i)=>{
+   const key=lessonKey(q.section,q.skill);
+   stats[key]??={correct:0,total:0,section:q.section,skill:q.skill};
+   stats[key].total++;
+   if(mark(q,record.answers[i]))stats[key].correct++;
+  });
+ }
+ return Object.entries(stats).filter(([,x])=>x.total>=2&&x.correct<x.total)
+   .sort((a,b)=>(a[1].correct/a[1].total)-(b[1].correct/b[1].total))
+   .slice(0,3);
 }
 function home(){
- const records=history(),today=records.filter(x=>x.endedAt.startsWith(day())),weak=weakness(),pending=active();
+ const records=history(),today=records.filter(x=>x.endedAt.startsWith(day())),weak=weakness(),pending=active(),pendingLesson=activeLesson();
+ const due=Object.entries(data.sats.skillProgress[learnerId]||{}).filter(([,p])=>p.reviewAt&&Date.parse(p.reviewAt)<=Date.now());
  shell(`<section class="hero"><div><div class="eyebrow">KODJO'S SATs PREPARATION · MAY 2027</div><h1>Ready to build your confidence, ${esc(learner().name)}?</h1><p>Short practice, real progress. No pressure to be perfect. Every mistake tells us what to practise next.</p><div class="hero-actions"><button class="primary" data-start="daily">Start today's SATs challenge →</button>${pending?'<button class="secondary" data-resume>Resume unfinished test</button>':''}</div><small>You can do the Daily Challenge as often as you like, including more than once a day.</small></div><div class="countdown"><b>${countdown()}</b><span>days until SATs begin<br>10 May 2027</span></div></section>
  <div class="overview"><div><strong>${records.length}</strong><span>Tests completed</span></div><div><strong>${today.length}</strong><span>Tests today</span></div><div><strong>${percent(records.slice(0,10).reduce((s,r)=>s+r.score,0),records.slice(0,10).reduce((s,r)=>s+r.total,0))}%</strong><span>Recent practice accuracy</span></div></div>
  <h2>Choose a practice module</h2><div class="grid">${MODULES.map(m=>`<article class="module ${m.featured?'featured':''}"><div class="icon">${m.icon}</div><h3>${esc(m.title)}</h3><p>${esc(m.description)}</p><div class="module-foot"><span>${esc(m.time)}</span><button data-start="${esc(m.id)}">Practise →</button></div></article>`).join('')}</div>
- <section class="panel"><h2>Your next learning targets</h2>${weak.length?`<p>Based on your recent tests, these would be good topics to practise next:</p><div class="targets">${weak.map(([name,s])=>`<span>${esc(name)} · ${s.correct}/${s.total}</span>`).join('')}</div>`:'<p>Complete your first practice test to discover which skills need more attention.</p>'}<p class="note">For full official-style paper practice, use the previous years’ published papers with an adult. This daily challenge is a shorter revision test.</p></section>
+ <section class="panel"><h2>Your next learning targets</h2>${weak.length?`<p>Based on your recent tests, these would be good topics to practise next:</p><div class="targets">${weak.map(([name,s])=>`<button type="button" class="target-link" data-fix="${esc(name)}">${esc(s.skill)} · ${s.correct}/${s.total} correct · Fix skill →</button>`).join('')}</div>`:'<p>Complete your first practice test to discover which skills need more attention.</p>'}<p class="note">For full official-style paper practice, use the previous years’ published papers with an adult. This daily challenge is a shorter revision test.</p></section>
+ ${pendingLesson&&pendingLesson.stage!=='summary'?`<section class="panel"><h2>Continue a lesson</h2><p>You have an unfinished lesson on ${esc(pendingLesson.skill)}.</p><button class="primary" data-lesson-resume>Resume lesson →</button></section>`:''}
+ ${due.length?`<section class="panel"><h2>Ready for a three-day review?</h2><div class="targets">${due.map(([key])=>`<button class="target-link" data-fix="${esc(key)}">Review ${esc(key.split('::')[1])} →</button>`).join('')}</div></section>`:''}
  ${records.length?`<section class="panel"><h2>Recent results</h2><div class="history">${records.slice(0,8).map((rec,i)=>`<button data-review="${i}"><span>${esc(MODULES.find(x=>x.id===rec.mode)?.title||rec.mode)}</span><strong>${rec.score}/${rec.total}</strong><small>${new Date(rec.endedAt).toLocaleDateString('en-GB')}</small></button>`).join('')}</div></section>`:''}`);
 }
 function start(mode){
@@ -92,12 +107,12 @@ function finish(){
 }
 function result(){
  const rec=reviewRecord;if(!rec){view='home';home();return;}
- const wrong=Object.entries(rec.stats).filter(([,s])=>s.correct<s.total).sort((a,b)=>a[1].correct/a[1].total-b[1].correct/b[1].total);
+ const wrong=missedSkills(rec).map(x=>[x.id,{correct:x.total-x.wrong,total:x.total,skill:x.skill,section:x.section}]);
  shell(`<section class="result-hero"><div class="eyebrow">TEST COMPLETE</div><h1>${rec.score} out of ${rec.total}</h1><p>${percent(rec.score,rec.total)}% correct · +${rec.xp} XP · ${Math.round(rec.durationSeconds/60)} minutes</p><p>${rec.score===rec.total?'Outstanding accuracy! Ready for another challenge?':'Good work completing the test. The interesting part is learning from what you missed.'}</p><div class="hero-actions"><button class="primary" data-start="daily">Try another Daily Challenge</button><button class="secondary" data-home>Back to SATs centre</button></div></section>
- <section class="panel"><h2>What to practise next</h2>${wrong.length?`<div class="targets">${wrong.slice(0,5).map(([s,v])=>`<span>${esc(s)} · ${v.correct}/${v.total}</span>`).join('')}</div><p>Pick a related module above to practise these skills again.</p>`:'<p>No errors this time. Keep reviewing regularly and try different modules.</p>'}<p class="note">These are practice accuracy scores, not official SATs scaled scores or predictions.</p></section>
+ <section class="panel"><h2>What to practise next</h2>${wrong.length?`<div class="targets">${wrong.slice(0,5).map(([s,v])=>`<button type="button" class="target-link" data-fix="${esc(s)}">${esc(v.skill)} · ${v.correct}/${v.total} · Fix this skill →</button>`).join('')}</div><p>Choose a skill to get a short explanation, guided practice and two independent checks.</p>`:'<p>No errors this time. Keep reviewing regularly and try different modules.</p>'}<p class="note">These are practice accuracy scores, not official SATs scaled scores or predictions.</p></section>
  <section class="panel"><h2>Review every answer</h2><div class="reviews">${rec.test.questions.map((q,i)=>`<details><summary><b class="${mark(q,rec.answers[i])?'right':'wrong'}">${mark(q,rec.answers[i])?'✓':'✕'}</b> ${i+1}. ${esc(q.prompt)}</summary><div><p><strong>Your answer:</strong> ${esc(rec.answers[i]||'(not answered)')}</p><p><strong>Correct answer:</strong> ${esc(q.answer)}</p><p>${esc(q.explanation)}</p></div></details>`).join('')}</div></section>`);
 }
-function render(){if(view==='test')testScreen();else if(view==='review')result();else home();}
+function render(){if(view==='test')testScreen();else if(view==='review')result();else if(view==='lesson')lessonScreen();else home();}
 root.addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
  if(button.hasAttribute('data-start')){start(button.dataset.start);return;}
