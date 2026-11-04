@@ -1,10 +1,18 @@
 {
   "name": "Family Learning Lab",
   "short_name": "Learning Lab",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8f6f0",
   "theme_color": "#f8f6f0",
   "description": "A small adaptive learning tutor for our family",
-  "icons": [{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "scope": "./"
 }
