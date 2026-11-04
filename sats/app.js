@@ -104,7 +104,7 @@ function finish(){
  if(unanswered&&!confirm(`${unanswered} question(s) unanswered. Finish and mark them as incorrect?`))return;
  if(needsHumanReview(state.test)){
    const first=reviewableIndexes(state.test)[0];
-   data.sats.pendingReviews[learnerId]={...state,current:first,manual:{},reviewed:{}};
+   data.sats.pendingReviews[learnerId]={...state,submittedAt:new Date().toISOString(),current:first,manual:{},reviewed:{}};
    delete data.sats.active[learnerId];
    save();view='marking';render();return;
  }
@@ -181,10 +181,77 @@ function recordLesson(lesson){
  save();
 }
 
+function markingScreen(){
+ const st=pendingMark();
+ if(!st){view='home';home();return;}
+ shell(extendedReviewMarkup(st,esc));
+}
+function updateMarkCriterion(raw){
+ const st=pendingMark();if(!st)return;
+ const [i,j]=String(raw).split(':').map(Number),q=st.test.questions[i];
+ if(!q||!q.criteria||!Number.isInteger(j)||j<0||j>=q.criteria.length)return;
+ const values=st.manual[i]||Array(q.criteria.length).fill(false);
+ values[j]=!values[j];
+ st.manual[i]=values;
+ st.reviewed[i]=false;
+ save();render();
+}
+function confirmMarkReview(index){
+ const st=pendingMark();if(!st)return;
+ const i=Number(index),q=st.test.questions[i];
+ if(!q||!q.criteria)return;
+ st.manual[i]??=Array(q.criteria.length).fill(false);
+ st.reviewed[i]=!st.reviewed[i];
+ save();render();
+}
+function stepMarkReview(delta){
+ const st=pendingMark();if(!st)return;
+ const list=reviewableIndexes(st.test);
+ const current=list.indexOf(st.current);
+ st.current=list[Math.max(0,Math.min(list.length-1,current+delta))];
+ save();render();
+}
+function finishMarking(){
+ const st=pendingMark();if(!st)return;
+ const grade=gradeExtended(st.test,st.answers,st.workings||[],st.manual,st.reviewed);
+ if(!grade.ready){alert('Review every written or method-mark question before saving the practice marks.');return;}
+ let rewards=data.rewards[learnerId]||defaultRewards(),xp=0;
+ for(let i=0;i<st.test.questions.length;i++){
+  const item=st.test.questions[i];
+  // No XP for self-awarded written/method marks. Only verifiable answers earn XP.
+  if(item.type==='written')continue;
+  const checked=mark(item,st.answers[i]);
+  const award=awardQuestion(rewards,{
+    skillId:'sats.'+item.section+'.'+item.skill,
+    questionId:item.id,correct:checked,independent:checked,difficulty:1
+  });
+  xp+=award.earned;rewards=award.state;
+ }
+ data.rewards[learnerId]=awardLessonComplete(rewards,{mastery:0}).state;
+ const rec={
+  mode:st.test.mode,test:st.test,answers:[...st.answers],
+  workings:[...(st.workings||[])],score:grade.score,total:grade.total,
+  marksByQuestion:grade.marksByQuestion,stats:grade.stats,
+  markingMethod:'Guided self-review or adult mark scheme',xp,
+  endedAt:st.submittedAt||new Date().toISOString(),
+  durationSeconds:Math.max(0,Math.round((Date.parse(st.submittedAt||new Date().toISOString())-Date.parse(st.startedAt))/1000))
+ };
+ data.sats.history[learnerId]=[rec,...history()].slice(0,45);
+ data.sats.recent[learnerId]=[...(data.sats.recent[learnerId]||[]),...st.test.questions.map(q=>q.id)].slice(-160);
+ delete data.sats.pendingReviews[learnerId];
+ reviewRecord=rec;view='review';save();render();
+}
+
 function render(){if(view==='marking')markingScreen();else if(view==='test')testScreen();else if(view==='review')result();else if(view==='lesson')lessonScreen();else home();}
 root.addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
 
+ if(button.hasAttribute('data-resume-mark')){view='marking';render();return;}
+ if(button.hasAttribute('data-mark-criterion')){updateMarkCriterion(button.dataset.markCriterion);return;}
+ if(button.hasAttribute('data-mark-confirm')){confirmMarkReview(button.dataset.markConfirm);return;}
+ if(button.hasAttribute('data-mark-prev')){stepMarkReview(-1);return;}
+ if(button.hasAttribute('data-mark-next')){stepMarkReview(1);return;}
+ if(button.hasAttribute('data-mark-finish')){finishMarking();return;}
  if(button.hasAttribute('data-fix')){startLesson(button.dataset.fix);return;}
  if(button.hasAttribute('data-lesson-resume')){view='lesson';render();return;}
  if(button.hasAttribute('data-lesson-home')){
