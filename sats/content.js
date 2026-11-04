@@ -1,3 +1,5 @@
+import {extraPassages} from './reading-extra.js';
+import {extraGrammar} from './english-extra.js';
 // Original Year 6 SATs-style practice content. Not official STA test questions.
 // Each reading set is independently authored, with increasing comprehension demands.
 export const MODULES = [
@@ -107,3 +109,7 @@ Conservation groups therefore encourage people to protect existing forests as we
   ['vocabulary','What does “complementary” mean in the last sentence?',['Working well together','Exactly identical','Working against each other','No longer needed'],'Working well together','Protecting old forests and planting new ones have different supporting roles.'],
   ['purpose','Why does the writer compare a forest to an old chair?',['To suggest furniture belongs in forests','To show that ancient forests cannot be quickly replaced','To explain how to use wood','To claim new trees are useless'],'To show that ancient forests cannot be quickly replaced','The comparison highlights the time needed for ecological relationships.']]}
 ];
+
+// Extend the original banks without changing existing stable IDs.
+grammar.push(...extraGrammar);
+passages.push(...extraPassages);
