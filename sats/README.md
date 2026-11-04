@@ -22,15 +22,16 @@ Questions are original, not copied from official test papers. Most sample tests 
 
 ## Design and modularity
 
-- `content.js`: independent authored reading passages, English item banks, spelling prompts and module registry.
-- `engine.js`: deterministic question generator, seed-based variation, recent-question avoidance, marking and per-skill breakdown.
-- `app.js`: question navigation, accessible input, answer persistence, lesson history, feedback after submission and XP integration.
+- `content.js`, `reading-extra.js`, `english-extra.js`: original passages, English item banks, spelling prompts and module registry.
+- `engine.js`, `reasoning-extra.js`: deterministic question generator, seed-based variation, expanded reasoning templates, recent-question avoidance, marking and per-skill breakdown.
+- `app.js`: question navigation, accessible input, saved tests and lessons, recommendations after submission and XP integration.
+- `remediation.js`, `lesson-ui.js`: targeted mini-lessons, guided practice, two independent checks and three-day follow-up.
 - `styles.css`, `index.html`: responsive self-contained HTML app, with path-relative assets for GitHub Pages.
-- `engine.test.js`: generator coverage, variation, validity and marking tests.
+- `engine.test.js`, `remediation.test.js`, `ui.test.js`: generator validity, assessment variety, targeted lessons, learner isolation and state persistence.
 
-Maths uses new numerical parameters each time; English draws from 30 grammar items, 70 spelling prompts and 6 original passages with four questions each. Each test avoids duplicates within its session and favours questions not recently used, but **a finite English bank will eventually repeat**. A future release should expand passages and include richer open-response comprehension and human-supported spelling where useful.
+Maths uses new numerical parameters each time, including 16 additional reasoning templates for geometry, volume, scaling, coordinates, money, statistics, ratio and percentages. English draws from **54 grammar questions**, **70 spelling prompts** and **12 original passages** with four questions each. Each test avoids duplicates within its session and favours questions not recently used, but **a finite English bank will eventually repeat**. The next content milestone should add richer written responses, diagrams and more substantial comprehension passages.
 
-Learner state is stored in the existing `family-learning-lab:v1` localStorage record under a new `sats` property. The existing `profiles`, `progress`, `sessions` and `rewards` fields are preserved. In-progress answers survive reload; finished results show topic weaknesses and worked feedback, and completed questions can earn points under the shared 100 XP/day policy. No paid AI, logins, external database, telemetry or third-party libraries.
+Learner state is stored in the existing `family-learning-lab:v1` localStorage record under a new `sats` property. The existing `profiles`, `progress`, `sessions` and `rewards` fields are preserved. In-progress answers and skill lessons survive reload; finished results show topic weaknesses and worked feedback, and completed questions can earn points under the shared 100 XP/day policy. A missed question offers **Fix this skill**: a short explanation and worked example, one guided question with hints, and two distinct independent checks. Two independent successes schedule a three-day revisit; otherwise the component remains a revision target. Reading vocabulary and grammar vocabulary are tracked separately. No paid AI, logins, external database, telemetry or third-party libraries.
 
 ## Validation
 
@@ -45,7 +46,7 @@ Serve the repository from its root (`python3 -m http.server 8000`) and open `htt
 
 ### Before merging
 
-1. Run tests and a mobile Safari/Chromium browser smoke test.
+1. Run tests and a physical mobile Safari/Chromium browser smoke test. Node integration tests simulate the completed test → lesson → review flow, but are not substitutes for device testing.
 2. Test both a new learner and a learner with existing local v0.2 rewards and progress.
 3. Confirm the main app still loads under GitHub Pages and its SATs navigation goes to the project-relative `./sats/` URL.
 4. Review English questions with Kodjo's school/teacher if possible. This is practice content, not formal exam-standardised assessment.
@@ -53,7 +54,7 @@ Serve the repository from its root (`python3 -m http.server 8000`) and open `htt
 
 ## Future improvements
 
-- Connect weak skill tags to tailored adaptive mini-lessons and 3-day review checks.
+- Refine the personalised revision loop with more teacher-reviewed explanations, multi-level lessons and retention statistics.
 - Expand maths geometry, fractions and multi-step reasoning; add diagrams and multi-mark working.
 - Add longer reading passages, more inference/explanation tasks and optional adult-reviewed free text.
 - Add paper-length timed practice calibrated to official paper structure, clearly labelled unofficial.
