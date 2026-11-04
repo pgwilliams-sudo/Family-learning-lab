@@ -145,7 +145,7 @@ export function mark(q,response){
  if(q.type==='multi-number'){
    const unit=String(q.unit||'');
    let value=String(response).trim();
-   if(unit==='£')value=value.replace(/^£\\s*/,'').replace(/\\s*£$/,'');
+   if(unit==='£')value=value.replace(/^£\s*/,'').replace(/\s*£$/,'');
    else if(unit&&value.toLowerCase().endsWith(unit.toLowerCase()))value=value.slice(0,-unit.length).trim();
    response=value;
  }
