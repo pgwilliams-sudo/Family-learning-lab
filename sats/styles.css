@@ -21,3 +21,21 @@
 .targets .target-link{border:1px solid #c5dbcf;background:#eaf5ed;color:#175c47;padding:10px 15px;font-size:.85rem;font-weight:720;border-radius:100px}
 .targets .target-link:hover{background:#d5ebdc}
 @media(max-width:560px){.lesson-actions{flex:1}.lesson-actions button{flex:1}.targets .target-link{width:100%;text-align:left}}
+
+
+/* Extended-paper writing and guided marking */
+.question textarea{display:block;width:100%;min-height:125px;resize:vertical;padding:14px;border:1px solid #bdcbc0;border-radius:12px;font:inherit;font-size:1rem;line-height:1.65;color:inherit;background:white;white-space:pre-wrap;margin-bottom:16px}
+.question textarea:focus-visible{outline:3px solid #dba450;outline-offset:3px}
+.marking-intro{margin-top:12px;margin-bottom:20px}
+.review-question{margin:12px 0}
+.review-passage{border:1px solid #dbe6dc;border-radius:10px;background:#f8faf5;padding:12px;margin-bottom:18px}
+.review-passage>summary{font-weight:700;cursor:pointer}
+.review-passage p{white-space:pre-line;line-height:1.8}
+.submitted-answer{background:#f7f7f4;border-radius:11px;padding:16px;margin:14px 0}
+.submitted-answer p{white-space:pre-wrap;overflow-wrap:anywhere}
+.mark-criteria{display:grid;gap:9px;margin:18px 0}
+.mark-criteria button{display:flex;text-align:left;gap:12px;align-items:flex-start;padding:13px 15px;background:white;border:1px solid #c7d8c9;border-radius:11px;color:#244b3f}
+.mark-criteria button.chosen{background:#e6f4e9;border:2px solid #237257;padding:12px 14px}
+.mark-criteria button>span:first-child{font-size:1.15rem;flex:0 0 23px}
+.mark-confirm{margin-top:10px;padding:11px 18px;border-radius:10px}
+@media(max-width:560px){.question textarea{min-height:135px}.review-question{padding:18px 14px}}
