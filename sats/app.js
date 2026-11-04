@@ -124,12 +124,29 @@ function finish(){
  delete data.sats.active[learnerId];
  reviewRecord=rec;view='review';save();render();
 }
+function reviewRows(rec){
+ return rec.test.questions.map((q,i)=>{
+   const max=q.marks||1;
+   const earned=rec.marksByQuestion?rec.marksByQuestion[i]:(mark(q,rec.answers[i])?1:0);
+   const correct=earned===max;
+   const answer=q.type==='written'?(q.example||'Answer assessed using the evidence checklist.'):q.answer;
+   const explanation=q.type==='multi-number'?(q.workingExample||q.explanation):q.explanation;
+   return '<details><summary><b class="'+(correct?'right':'wrong')+'">'+earned+'/'+max+'</b> '+(i+1)+'. '+esc(q.prompt)+'</summary><div>'
+    +'<p><strong>Your answer:</strong> '+esc(rec.answers[i]||'(not answered)')+'</p>'
+    +(q.type==='multi-number'?'<p><strong>Your working:</strong> '+esc(rec.workings?.[i]||'(none shown)')+'</p>':'')
+    +'<p><strong>Example / correct answer:</strong> '+esc(answer)+'</p>'
+    +(explanation?'<p>'+esc(explanation)+'</p>':'')
+    +(q.criteria?'<p><strong>Mark points:</strong></p><ul>'+q.criteria.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>':'')
+    +'</div></details>';
+ }).join('');
+}
+
 function result(){
  const rec=reviewRecord;if(!rec){view='home';home();return;}
  const wrong=missedSkills(rec).map(x=>[x.id,{correct:x.total-x.wrong,total:x.total,skill:x.skill,section:x.section}]);
- shell(`<section class="result-hero"><div class="eyebrow">TEST COMPLETE</div><h1>${rec.score} out of ${rec.total}</h1><p>${percent(rec.score,rec.total)}% correct · +${rec.xp} XP · ${Math.round(rec.durationSeconds/60)} minutes</p><p>${rec.score===rec.total?'Outstanding accuracy! Ready for another challenge?':'Good work completing the test. The interesting part is learning from what you missed.'}</p><div class="hero-actions"><button class="primary" data-start="daily">Try another Daily Challenge</button><button class="secondary" data-home>Back to SATs centre</button></div></section>
+ shell(`<section class="result-hero"><div class="eyebrow">TEST COMPLETE</div><h1>${rec.score} out of ${rec.total}</h1><p>${percent(rec.score,rec.total)}% correct · +${rec.xp} XP · ${Math.round(rec.durationSeconds/60)} minutes</p><p>${rec.score===rec.total?'Outstanding accuracy! Ready for another challenge?':'Good work completing the test. The interesting part is learning from what you missed.'}</p>${rec.marksByQuestion?extendedResultIntro(rec,esc):''}<div class="hero-actions"><button class="primary" data-start="daily">Try another Daily Challenge</button><button class="secondary" data-home>Back to SATs centre</button></div></section>
  <section class="panel"><h2>What to practise next</h2>${wrong.length?`<div class="targets">${wrong.slice(0,5).map(([s,v])=>`<button type="button" class="target-link" data-fix="${esc(s)}">${esc(v.skill)} · ${v.correct}/${v.total} · Fix this skill →</button>`).join('')}</div><p>Choose a skill to get a short explanation, guided practice and two independent checks.</p>`:'<p>No errors this time. Keep reviewing regularly and try different modules.</p>'}<p class="note">These are practice accuracy scores, not official SATs scaled scores or predictions.</p></section>
- <section class="panel"><h2>Review every answer</h2><div class="reviews">${rec.test.questions.map((q,i)=>`<details><summary><b class="${mark(q,rec.answers[i])?'right':'wrong'}">${mark(q,rec.answers[i])?'✓':'✕'}</b> ${i+1}. ${esc(q.prompt)}</summary><div><p><strong>Your answer:</strong> ${esc(rec.answers[i]||'(not answered)')}</p><p><strong>Correct answer:</strong> ${esc(q.answer)}</p><p>${esc(q.explanation)}</p></div></details>`).join('')}</div></section>`);
+ <section class="panel"><h2>Review every answer</h2><div class="reviews">${reviewRows(rec)}
 }
 
 function startLesson(key){
