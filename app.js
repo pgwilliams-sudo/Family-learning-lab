@@ -1,9 +1,9 @@
-import {subjects, getSkill, getSkills, getSubject} from './data/catalog.js';
-import {bank,fmt,addFractions,chooseQuestion,equalFractions,workedSolution} from './engine/fractions.js';
-import {SESSION_QUESTIONS,defaultSkillProgress,initialDifficulty,evaluateAttempt,nextDifficulty,advice} from './engine/adaptive.js';
-import {tutorReply} from './tutor/feedback.js';
+import {subjects, getSkill, getSkills, getSubject} from './catalog.js';
+import {bank,fmt,addFractions,chooseQuestion,equalFractions,workedSolution} from './fractions.js';
+import {SESSION_QUESTIONS,defaultSkillProgress,initialDifficulty,evaluateAttempt,nextDifficulty,advice} from './adaptive.js';
+import {tutorReply} from './feedback.js';
 import {load,save,progressKey,exportData} from './storage.js';
-import {defaultRewards,awardQuestion,awardLessonComplete,badgeDetails,levelForXP,xpIntoLevel,XP_PER_LEVEL} from './engine/rewards.js';
+import {defaultRewards,awardQuestion,awardLessonComplete,badgeDetails,levelForXP,xpIntoLevel,XP_PER_LEVEL} from './rewards.js';
 
 const root=document.getElementById('app');
 let data=load();
