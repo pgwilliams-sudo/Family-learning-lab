@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {gcd,lcm,simplify,addFractions,equalFractions,chooseQuestion,bank,workedSolution} from '../src/engine/fractions.js';
-import {defaultSkillProgress,initialDifficulty,evaluateAttempt,nextDifficulty} from '../src/engine/adaptive.js';
+import {gcd,lcm,simplify,addFractions,equalFractions,chooseQuestion,bank,workedSolution} from './fractions.js';
+import {defaultSkillProgress,initialDifficulty,evaluateAttempt,nextDifficulty} from './adaptive.js';
 
 test('gcd and lcm',()=>{assert.equal(gcd(12,18),6);assert.equal(lcm(3,4),12);assert.equal(lcm(4,8),8)});
 test('simplify',()=>{assert.deepEqual(simplify({n:4,d:6}),{n:2,d:3});assert.deepEqual(simplify({n:0,d:7}),{n:0,d:1});assert.throws(()=>simplify({n:2,d:0}))});

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultRewards,awardQuestion,awardLessonComplete,levelForXP,xpIntoLevel,localDay,DAILY_XP_CAP} from '../src/engine/rewards.js';
+import {defaultRewards,awardQuestion,awardLessonComplete,levelForXP,xpIntoLevel,localDay,DAILY_XP_CAP} from './rewards.js';
 const date = new Date(2026,10,4,12,0);
 const Q=(questionId,other={})=>({skillId:'maths.fractions.add-unlike',questionId,correct:true,independent:true,difficulty:1,date,...other});
 test('awards verified independent answer once per question per day',()=>{
